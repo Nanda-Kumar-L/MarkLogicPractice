@@ -2,8 +2,6 @@ xquery version "1.0-ml";
 
 declare namespace wl = "http://marklogic.com/mlu/world-leaders";
 
-import module namespace co = "http://marklogic.com/mlu/world-leaders/common" at "modules/common-lib.xqy";
-
 xdmp:set-response-content-type("text/html; charset=utf-8"),
 '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">',
 <html xmlns="http://www.w3.org/1999/xhtml">
@@ -15,29 +13,34 @@ xdmp:set-response-content-type("text/html; charset=utf-8"),
 
 <body>
 <div id="wrapper">
-  <a href="index.xqy">
-  <img src="images/logo.gif" width="427" height="76" />
-  </a>
-  <br />
-  <span class="currently">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Currently in database: {fn:count(/wl:leader)} {co:in-office()}</span><br />
+  <a href="index.xqy"><img src="images/logo.gif" width="427" height="76" /></a><br />
+  <span class="currently">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Currently in database: Currently in database: {fn:count(/wl:leader)}</span><br />
   <br />
   <br />
   <br />
-	<div id="tabs">
+  <div id="tabs">
 		<a href="index.xqy">
-	<img src="images/byname_selected.gif" width="121" height="30" />
+	<img src="images/byname.gif" width="121" height="30" />
 		</a>
 		<a href="bycountry.xqy">
 	<img src="images/bycountry.gif" width="121" height="30" />
 		</a>
 		<a href="bydate.xqy">
-	<img src="images/bydate.gif" width="121" height="30" />
+	<img src="images/bydate_selected.gif" width="121" height="30" />
 		</a>
 		<a href="search.xqy">
 	<img src="images/search.gif" width="121" height="30" />
 		</a>
 	</div>
-  <div id="graybar"></div>
+	
+  <div id="graybar">
+	<form name="formdate" method="get" action="bydate.xqy" id="formdate">
+		<p>Enter a date (e.g. 1999-10-31): </p>
+		<input type="text" name="date" id="term" value="{xdmp:get-request-field("date")}"/>
+		<input type="submit" name="submitbtn" id="submitbtn" value="go"/>
+	</form>
+  </div>
+  
   <div id="content">
    <table cellspacing="0">
     <tr>
@@ -67,7 +70,11 @@ xdmp:set-response-content-type("text/html; charset=utf-8"),
    let $gender := $leader/wl:gender/text()
    let $summary := fn:tokenize(fn:string($leader/wl:summary), " ")[1 to 100]
    let $age := xs:integer(fn:days-from-duration(fn:current-date() - xs:date($leader/wl:dob/text())) div 365.25)
-   order by $lastname, $firstname
+   where if(fn:string-length(xdmp:get-request-field("date")) lt 10)
+	then fn:true()
+	else $startdate <= xdmp:get-request-field("date", "2100-01-01") and
+	$enddate >= xdmp:get-request-field("date", "1900-01-01")
+   order by $enddate descending, $lastname
    return (
 <tr>
  <td colspan="10"><hr/></td>

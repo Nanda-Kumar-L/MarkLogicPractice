@@ -2,8 +2,6 @@ xquery version "1.0-ml";
 
 declare namespace wl = "http://marklogic.com/mlu/world-leaders";
 
-import module namespace co = "http://marklogic.com/mlu/world-leaders/common" at "modules/common-lib.xqy";
-
 xdmp:set-response-content-type("text/html; charset=utf-8"),
 '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">',
 <html xmlns="http://www.w3.org/1999/xhtml">
@@ -15,17 +13,14 @@ xdmp:set-response-content-type("text/html; charset=utf-8"),
 
 <body>
 <div id="wrapper">
-  <a href="index.xqy">
-  <img src="images/logo.gif" width="427" height="76" />
-  </a>
-  <br />
-  <span class="currently">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Currently in database: {fn:count(/wl:leader)} {co:in-office()}</span><br />
+  <a href="index.xqy"><img src="images/logo.gif" width="427" height="76" /></a><br />
+  <span class="currently">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Currently in database: Currently in database: {fn:count(/wl:leader)}</span><br />
   <br />
   <br />
   <br />
-	<div id="tabs">
+  <div id="tabs">
 		<a href="index.xqy">
-	<img src="images/byname_selected.gif" width="121" height="30" />
+	<img src="images/byname.gif" width="121" height="30" />
 		</a>
 		<a href="bycountry.xqy">
 	<img src="images/bycountry.gif" width="121" height="30" />
@@ -34,10 +29,18 @@ xdmp:set-response-content-type("text/html; charset=utf-8"),
 	<img src="images/bydate.gif" width="121" height="30" />
 		</a>
 		<a href="search.xqy">
-	<img src="images/search.gif" width="121" height="30" />
+	<img src="images/search_selected.gif" width="121" height="30" />
 		</a>
 	</div>
-  <div id="graybar"></div>
+	
+  <div id="graybar">
+	<form name="formsearch" method="get" action="search.xqy" id="formsearch">
+		<p>Enter a search term: </p>
+		<input type="text" name="term" id="term" value="{xdmp:get-request-field("term")}"/>
+		<input type="submit" name="submitbtn" id="submitbtn" value="go"/>
+	</form>
+  </div>
+  
   <div id="content">
    <table cellspacing="0">
     <tr>
@@ -54,7 +57,7 @@ xdmp:set-response-content-type("text/html; charset=utf-8"),
     </tr>
 
 
-  {for $leader in /wl:leader
+  {for $leader in /wl:leader[cts:contains(., xdmp:get-request-field("term"))]
    let $firstname := $leader/wl:name/wl:firstname/text()
    let $lastname := $leader/wl:name/wl:lastname/text()
    let $country := $leader/wl:country/text()
