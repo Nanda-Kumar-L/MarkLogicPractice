@@ -1,0 +1,128 @@
+<export><workspace name="Workspace 6"><query name="Query 1" focus="false" listorder="1" taborder="1" active="true" database="5505543965037030129" server="4586327928347208055" database-name="Documents" server-name="App-Services" mode="xquery" optimize="1">xquery version "1.0-ml";
+xdmp:document-insert('/Books/Book1',
+&lt;tXML&gt;
+&lt;Books&gt;
+&lt;BookName&gt;Fundamentals of JavaScript&lt;/BookName&gt;
+&lt;Pages&gt;489&lt;/Pages&gt;
+&lt;BookType&gt;Programming&lt;/BookType&gt;
+&lt;/Books&gt;
+&lt;/tXML&gt;,
+&lt;options xmlns="xdmp:document-insert"&gt;
+&lt;collections&gt;
+&lt;collection&gt;Books&lt;/collection&gt;
+&lt;/collections&gt;
+&lt;/options&gt;
+)</query><query name="Query 2" focus="false" listorder="2" taborder="2" active="true" database="5505543965037030129" server="4586327928347208055" database-name="Documents" server-name="App-Services" mode="xquery" optimize="1">xquery version "1.0-ml";
+
+xdmp:document-insert('/Books/Book2',
+&lt;tXML&gt;
+&lt;Books&gt;
+&lt;BookName&gt;To Kill a Mockingbird&lt;/BookName&gt;
+&lt;Pages&gt;336&lt;/Pages&gt;
+&lt;BookType&gt;Fiction&lt;/BookType&gt;
+&lt;/Books&gt;
+&lt;/tXML&gt;,
+&lt;options xmlns="xdmp:document-insert"&gt;
+&lt;collections&gt;
+&lt;collection&gt;Books&lt;/collection&gt;
+&lt;/collections&gt;
+&lt;/options&gt;
+)</query><query name="Query 3" focus="false" listorder="3" taborder="3" active="true" database="5505543965037030129" server="4586327928347208055" database-name="Documents" server-name="App-Services" mode="xquery" optimize="1">xquery version "1.0-ml";
+
+xdmp:document-insert('/Books/Book3',
+&lt;tXML&gt;
+&lt;Books&gt;
+&lt;BookName&gt;1984&lt;/BookName&gt;
+&lt;Pages&gt;328&lt;/Pages&gt;
+&lt;BookType&gt;Fiction&lt;/BookType&gt;
+&lt;/Books&gt;
+&lt;/tXML&gt;,
+&lt;options xmlns="xdmp:document-insert"&gt;
+&lt;collections&gt;
+&lt;collection&gt;Books&lt;/collection&gt;
+&lt;/collections&gt;
+&lt;/options&gt;
+)</query><query name="Query 4" focus="false" listorder="4" taborder="4" active="true" database="5505543965037030129" server="4586327928347208055" database-name="Documents" server-name="App-Services" mode="xquery" optimize="1">xquery version "1.0-ml";
+
+xdmp:document-insert('/Books/Book4',
+&lt;tXML&gt;
+&lt;Books&gt;
+&lt;BookName&gt;Harry Potter and the Philosopher's Stone&lt;/BookName&gt;
+&lt;Pages&gt;332&lt;/Pages&gt;
+&lt;BookType&gt;Fiction&lt;/BookType&gt;
+&lt;/Books&gt;
+&lt;/tXML&gt;,
+&lt;options xmlns="xdmp:document-insert"&gt;
+&lt;collections&gt;
+&lt;collection&gt;Books&lt;/collection&gt;
+&lt;/collections&gt;
+&lt;/options&gt;
+)</query><query name="Query 5" focus="false" listorder="5" taborder="5" active="true" database="5505543965037030129" server="4586327928347208055" database-name="Documents" server-name="App-Services" mode="xquery" optimize="1">xquery version "1.0-ml";
+
+xdmp:document-insert('/Books/Book5',
+&lt;tXML&gt;
+&lt;Books&gt;
+&lt;BookName&gt;The Catcher in the Rye&lt;/BookName&gt;
+&lt;Pages&gt;277&lt;/Pages&gt;
+&lt;BookType&gt;Fiction&lt;/BookType&gt;
+&lt;/Books&gt;
+&lt;/tXML&gt;,
+&lt;options xmlns="xdmp:document-insert"&gt;
+&lt;collections&gt;
+&lt;collection&gt;Books&lt;/collection&gt;
+&lt;/collections&gt;
+&lt;/options&gt;
+)</query><query name="Query 6" focus="false" listorder="6" taborder="6" active="true" database="5505543965037030129" server="4586327928347208055" database-name="Documents" server-name="App-Services" mode="xquery" optimize="1">
+xquery version "1.0-ml";
+
+xdmp:document-insert('/Books/Book6',
+&lt;tXML&gt;
+&lt;Books&gt;
+&lt;BookName&gt;The Lord of the Rings&lt;/BookName&gt;
+&lt;Pages&gt;1178&lt;/Pages&gt;
+&lt;BookType&gt;Fiction&lt;/BookType&gt;
+&lt;/Books&gt;
+&lt;/tXML&gt;,
+&lt;options xmlns="xdmp:document-insert"&gt;
+&lt;collections&gt;
+&lt;collection&gt;Books&lt;/collection&gt;
+&lt;/collections&gt;
+&lt;/options&gt;
+)</query><query name="Query 7" focus="false" listorder="7" taborder="7" active="true" database="5505543965037030129" server="4586327928347208055" database-name="Documents" server-name="App-Services" mode="xquery" optimize="1">
+xquery version "1.0-ml";
+
+xdmp:document-insert('/Books/Book7',
+&lt;tXML&gt;
+&lt;Books&gt;
+&lt;BookName&gt;The Da Vinci Code&lt;/BookName&gt;
+&lt;Pages&gt;597&lt;/Pages&gt;
+&lt;BookType&gt;Fiction&lt;/BookType&gt;
+&lt;/Books&gt;
+&lt;/tXML&gt;,
+&lt;options xmlns="xdmp:document-insert"&gt;
+&lt;collections&gt;
+&lt;collection&gt;Books&lt;/collection&gt;
+&lt;/collections&gt;
+&lt;/options&gt;
+)</query><query name="Query 8" focus="false" listorder="8" taborder="8" active="true" database="5505543965037030129" server="4586327928347208055" database-name="Documents" server-name="App-Services" mode="xquery" optimize="1">xquery version "1.0-ml";
+collection("Books")/tXML/Books/Pages/text()</query><query name="Query 9" focus="false" listorder="9" taborder="9" active="true" database="5505543965037030129" server="4586327928347208055" database-name="Documents" server-name="App-Services" mode="xquery" optimize="1">xquery version "1.0-ml";
+cts:search(fn:doc(),cts:path-range-query("/tXML/Books/Pages","&gt;",500))</query><query name="Query 10" focus="false" listorder="10" taborder="10" active="true" database="5505543965037030129" server="4586327928347208055" database-name="Documents" server-name="App-Services" mode="xquery" optimize="1">xquery version "1.0-ml";
+/tXML/Books/Pages
+</query><query name="Query 11" focus="false" listorder="11" taborder="11" active="true" database="5505543965037030129" server="4586327928347208055" database-name="Documents" server-name="App-Services" mode="xquery" optimize="1">xquery version "1.0-ml";
+for $i in cts:search(//tXML,"Fiction")
+return $i/Books/Pages </query><query name="Query 12" focus="false" listorder="12" taborder="12" active="true" database="5505543965037030129" server="4586327928347208055" database-name="Documents" server-name="App-Services" mode="xquery" optimize="1">xquery version "1.0-ml";
+
+cts:values(cts:element-reference(xs:QName("BookName")))</query><query name="Query 13" focus="false" listorder="13" taborder="13" active="true" database="5505543965037030129" server="4586327928347208055" database-name="Documents" server-name="App-Services" mode="xquery" optimize="1">xquery version "1.0-ml";
+
+cts:value-match(cts:element-reference(xs:QName("BookName")), "*mo*","case-insensitive")</query><query name="Query 14" focus="false" listorder="14" taborder="14" active="true" database="5505543965037030129" server="4586327928347208055" database-name="Documents" server-name="App-Services" mode="xquery" optimize="1">xquery version "1.0-ml";
+
+for $i in cts:search(fn:doc(),cts:path-range-query("/tXML/Books/Pages","&gt;",500))
+return $i//Pages</query><query name="Query 15" focus="false" listorder="15" taborder="15" active="true" database="5505543965037030129" server="4586327928347208055" database-name="Documents" server-name="App-Services" mode="xquery" optimize="1">xquery version "1.0-ml";
+
+cts:search(//book, cts:document-query("/abcd"))
+
+</query><query name="Query 16" focus="false" listorder="16" taborder="16" active="true" database="5505543965037030129" server="4586327928347208055" database-name="Documents" server-name="App-Services" mode="xquery" optimize="1">xquery version "1.0-ml";
+cts:search(//Pages, cts:collection-query("Books"))</query><query name="Query 17" focus="false" listorder="17" taborder="17" active="true" database="5505543965037030129" server="4586327928347208055" database-name="Documents" server-name="App-Services" mode="xquery" optimize="1">xquery version "1.0-ml";
+
+cts:uri-match("*book*","case-sensitive")</query><query name="Query 18" focus="true" listorder="18" taborder="18" active="true" database="5505543965037030129" server="4586327928347208055" database-name="Documents" server-name="App-Services" mode="xquery" optimize="1">xquery version "1.0-ml";
+</query></workspace></export>

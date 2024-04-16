@@ -1,0 +1,64 @@
+<export><workspace name="Workspace 3"><query name="Query 1" focus="false" listorder="1" taborder="1" active="true" database="5505543965037030129" server="4586327928347208055" database-name="Documents" server-name="App-Services" mode="xquery" optimize="1">xquery version "1.0-ml";
+xdmp:document-insert("library/books",
+&lt;library&gt;
+  &lt;book&gt;
+    &lt;title&gt;Book 1&lt;/title&gt;
+    &lt;author&gt;Author 1&lt;/author&gt;
+    &lt;year&gt;2022&lt;/year&gt;
+  &lt;/book&gt;
+  &lt;book&gt;
+    &lt;title&gt;Book 2&lt;/title&gt;
+    &lt;author&gt;Author 2&lt;/author&gt;
+    &lt;year&gt;2023&lt;/year&gt;
+  &lt;/book&gt;
+  &lt;book&gt;
+    &lt;title&gt;Book 3&lt;/title&gt;
+    &lt;author&gt;Author 1&lt;/author&gt;
+    &lt;year&gt;2020&lt;/year&gt;
+  &lt;/book&gt;
+  &lt;book&gt;
+    &lt;title&gt;Book 4&lt;/title&gt;
+    &lt;author&gt;Author 1&lt;/author&gt;
+    &lt;year&gt;2022&lt;/year&gt;
+  &lt;/book&gt;
+  &lt;book&gt;
+    &lt;title&gt;Book 5&lt;/title&gt;
+    &lt;author&gt;Author 2&lt;/author&gt;
+    &lt;year&gt;2023&lt;/year&gt;
+  &lt;/book&gt;
+  &lt;book&gt;
+    &lt;title&gt;Book 3&lt;/title&gt;
+    &lt;author&gt;Author 1&lt;/author&gt;
+    &lt;year&gt;2020&lt;/year&gt;
+  &lt;/book&gt;
+&lt;/library&gt;,
+&lt;options xmlns="xdmp:document-insert"&gt;
+&lt;collections&gt;
+&lt;collection&gt;Library&lt;/collection&gt;  
+&lt;/collections&gt;
+&lt;/options&gt;
+)
+
+
+</query><query name="Query 2" focus="false" listorder="2" taborder="2" active="true" database="5505543965037030129" server="4586327928347208055" database-name="Documents" server-name="App-Services" mode="xquery" optimize="1">xquery version "1.0-ml";
+
+doc('library/books')/library/book</query><query name="Query 3" focus="false" listorder="3" taborder="3" active="true" database="5505543965037030129" server="4586327928347208055" database-name="Documents" server-name="App-Services" mode="xquery" optimize="1">xquery version "1.0-ml";
+
+for $i in cts:values(cts:element-reference(xs:QName("book")))
+return ($i)
+
+
+</query><query name="Query 4" focus="false" listorder="4" taborder="4" active="true" database="5505543965037030129" server="4586327928347208055" database-name="Documents" server-name="App-Services" mode="xquery" optimize="1">xquery version "1.0-ml";
+fn:distinct-values(doc('library/books')/library/book/author)</query><query name="Query 5" focus="false" listorder="5" taborder="5" active="true" database="5505543965037030129" server="4586327928347208055" database-name="Documents" server-name="App-Services" mode="xquery" optimize="1">xquery version "1.0-ml";
+fn:count(doc('library/books')/library/book[author="Author 1"]),
+fn:count(doc('library/books')/library/book[author="Author 2"])</query><query name="Query 6" focus="false" listorder="6" taborder="6" active="true" database="5505543965037030129" server="4586327928347208055" database-name="Documents" server-name="App-Services" mode="xquery" optimize="1">xquery version "1.0-ml";
+doc('library/books')/library/book[not(year le 2020)]
+
+
+</query><query name="Query 7" focus="true" listorder="7" taborder="7" active="true" database="5505543965037030129" server="4586327928347208055" database-name="Documents" server-name="App-Services" mode="xquery" optimize="1">xquery version "1.0-ml";
+ 
+element Result{
+for $author in fn:distinct-values(doc('library/books')/library/book/author)
+let $count := count(doc('library/books')/library/book[./author eq $author])
+return element object{element author{$author}, element Books{$count}}
+}</query></workspace></export>
