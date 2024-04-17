@@ -1,0 +1,158 @@
+<export><workspace name="Workspace 2"><query name="Query 1" focus="false" listorder="1" taborder="1" active="true" database="9677369848798960539" server="13492416535972736312" database-name="top-songs" server-name="8040-top-songs" mode="xquery" optimize="1">xdmp:document-insert("song1.xml",
+ &lt;top-song&gt;
+&lt;title&gt;Money for Nothing&lt;/title&gt;
+&lt;artist&gt;Dire Straits&lt;/artist&gt;
+&lt;weeks&gt;
+ &lt;week&gt;1985-09-21&lt;/week&gt;
+ &lt;week&gt;1985-09-28&lt;/week&gt;
+ &lt;week&gt;1985-10-05&lt;/week&gt;
+&lt;/weeks&gt;
+&lt;album&gt;Brothers in Arms&lt;/album&gt;
+ &lt;/top-song&gt;)</query><query name="Query 2" focus="false" listorder="2" taborder="2" active="true" database="5505543965037030129" server="4586327928347208055" database-name="Documents" server-name="App-Services" mode="xquery" optimize="1">xquery version "1.0-ml";
+fn:doc("song1.xml")</query><query name="Query 3" focus="false" listorder="3" taborder="3" active="true" database="9677369848798960539" server="13492416535972736312" database-name="top-songs" server-name="8040-top-songs" mode="xquery" optimize="1">xquery version "1.0-ml";
+xdmp:document-load("C:\mls-developer\unit10\top-songs-source\songs\Coldplay+Viva-la-Vida.xml")</query><query name="Query 4" focus="false" listorder="4" taborder="4" active="true" database="9677369848798960539" server="13492416535972736312" database-name="top-songs" server-name="8040-top-songs" mode="xquery" optimize="1">xquery version "1.0-ml";
+
+xdmp:document-load("C:\mls-developer\unit10\top-songs-source\songs\The-Doors+Light-My-Fire.xml",
+ &lt;options xmlns="xdmp:document-load"&gt;
+&lt;uri&gt;/songs/The-Doors+Light-My-Fire.xml&lt;/uri&gt;
+&lt;permissions&gt;{xdmp:default-permissions()}&lt;/permissions&gt;
+&lt;collections&gt;
+ &lt;collection&gt;all&lt;/collection&gt;
+ &lt;collection&gt;rock&lt;/collection&gt;
+&lt;/collections&gt;
+&lt;format&gt;xml&lt;/format&gt;
+ &lt;/options&gt;)</query><query name="Query 5" focus="false" listorder="5" taborder="5" active="true" database="9677369848798960539" server="13492416535972736312" database-name="top-songs" server-name="8040-top-songs" mode="xquery" optimize="1">xquery version "1.0-ml";
+
+xdmp:document-load("C:\mls-developer\unit10\overtheyears.html",
+ &lt;options xmlns="xdmp:document-load"&gt;
+ &lt;format&gt;xml&lt;/format&gt;
+ &lt;repair&gt;full&lt;/repair&gt;
+ &lt;/options&gt;)</query><query name="Query 6" focus="false" listorder="6" taborder="6" active="true" database="9677369848798960539" server="13492416535972736312" database-name="top-songs" server-name="8040-top-songs" mode="xquery" optimize="1">xquery version "1.0-ml";
+fn:doc("C:\mls-developer\unit10\overtheyears.html")</query><query name="Query 7" focus="false" listorder="7" taborder="7" active="true" database="9677369848798960539" server="13492416535972736312" database-name="top-songs" server-name="8040-top-songs" mode="xquery" optimize="1">xquery version "1.0-ml";
+
+declare namespace dir="http://marklogic.com/xdmp/directory";
+for $d in xdmp:filesystem-directory("C:\mls-developer\unit10\top-songssource\songs")//dir:entry
+return xdmp:document-load($d//dir:pathname,
+ &lt;options xmlns="xdmp:document-load"&gt;
+&lt;uri&gt;{fn:string($d//dir:filename)}&lt;/uri&gt;
+ &lt;/options&gt;)</query><query name="Query 8" focus="false" listorder="8" taborder="8" active="true" database="9677369848798960539" server="13492416535972736312" database-name="top-songs" server-name="8040-top-songs" mode="xquery" optimize="1">xquery version "1.0-ml";
+declare namespace dir="http://marklogic.com/xdmp/directory";
+for $d in xdmp:filesystem-directory("C:\mls-developer\unit10\top-songs-source\songs")//dir:entry
+return xdmp:document-load($d//dir:pathname,
+ &lt;options xmlns="xdmp:document-load"&gt;
+&lt;uri&gt;{fn:string($d//dir:filename)}&lt;/uri&gt;
+ &lt;/options&gt;)</query><query name="Query 9" focus="false" listorder="9" taborder="9" active="true" database="9677369848798960539" server="13492416535972736312" database-name="top-songs" server-name="8040-top-songs" mode="xquery" optimize="1">xquery version "1.0-ml";
+
+import module namespace info = "http://marklogic.com/appservices/infostudio" at 
+"/MarkLogic/appservices/infostudio/info.xqy";
+let $path := "C:\mls-developer\unit10\top-songs-source\songs"
+let $options := 
+ &lt;options xmlns="http://marklogic.com/appservices/infostudio"&gt;
+ &lt;uri&gt;
+ &lt;literal&gt;/songs/&lt;/literal&gt;
+ &lt;filename/&gt;
+ &lt;literal&gt;.&lt;/literal&gt;
+ &lt;ext/&gt;
+ &lt;/uri&gt;
+ &lt;max-docs-per-transaction&gt;100&lt;/max-docs-per-transaction&gt;
+ &lt;error-handling&gt;continue-with-warning&lt;/error-handling&gt;
+ &lt;overwrite&gt;overwrite&lt;/overwrite&gt;
+ &lt;/options&gt;
+let $database := "top-songs"
+return info:load($path, (), $options, $database)</query><query name="Query 10" focus="false" listorder="10" taborder="10" active="true" database="9677369848798960539" server="13492416535972736312" database-name="top-songs" server-name="8040-top-songs" mode="xquery" optimize="1">xquery version "1.0-ml";
+
+declare namespace dir="http://marklogic.com/xdmp/directory";
+let $jason := xdmp:document-get("C:\mls-developer\unit10\favs\jasonfavs.xml")//song/text()
+let $danny := xdmp:document-get("C:\mls-developer\unit10\favs\dannyfavs.xml")//song/text()
+for $d in xdmp:filesystem-directory("C:\mls-developer\unit10\top-songs-source\songs")//dir:entry
+return xdmp:document-load($d//dir:pathname,
+ &lt;options xmlns="xdmp:document-load"&gt;
+&lt;uri&gt;/songs/{fn:string($d//dir:filename)}&lt;/uri&gt;
+&lt;collections&gt;
+ {
+ if (fn:string($d//dir:filename) = $jason)
+ then &lt;collection&gt;jason&lt;/collection&gt;
+ else ()
+ }
+ {
+ if (fn:string($d//dir:filename) = $danny) 
+ then &lt;collection&gt;danny&lt;/collection&gt;
+ else ()
+ }
+&lt;/collections&gt;
+ &lt;/options&gt;)</query><query name="Query 11" focus="false" listorder="11" taborder="11" active="true" database="9677369848798960539" server="13492416535972736312" database-name="top-songs" server-name="8040-top-songs" mode="xquery" optimize="1">xquery version "1.0-ml";
+fn:collection("jason")
+</query><query name="Query 12" focus="false" listorder="12" taborder="12" active="true" database="9677369848798960539" server="13492416535972736312" database-name="top-songs" server-name="8040-top-songs" mode="xquery" optimize="1">xquery version "1.0-ml";
+fn:count(fn:collection("danny"))</query><query name="Query 13" focus="false" listorder="13" taborder="13" active="true" database="9677369848798960539" server="13492416535972736312" database-name="top-songs" server-name="8040-top-songs" mode="xquery" optimize="1">xquery version "1.0-ml";
+
+import module namespace info = "http://marklogic.com/appservices/infostudio" at 
+"/MarkLogic/appservices/infostudio/info.xqy";
+let $path := "C:\mls-developer\unit10\top-songs-source\images"
+let $options := 
+ &lt;options xmlns="http://marklogic.com/appservices/infostudio"&gt;
+ &lt;uri&gt;
+ &lt;literal&gt;/images/&lt;/literal&gt;
+ &lt;filename/&gt;
+ &lt;literal&gt;.&lt;/literal&gt;
+ &lt;ext/&gt;
+ &lt;/uri&gt;
+ &lt;/options&gt;
+let $database := "top-songs"
+return info:load($path, (), $options, $database)</query><query name="Query 14" focus="false" listorder="14" taborder="14" active="true" database="9677369848798960539" server="13492416535972736312" database-name="top-songs" server-name="8040-top-songs" mode="xquery" optimize="1">xquery version "1.0-ml";
+for $i in xdmp:directory("/images/")
+return fn:base-uri($i)</query><query name="Query 15" focus="false" listorder="15" taborder="15" active="true" database="9677369848798960539" server="13492416535972736312" database-name="top-songs" server-name="8040-top-songs" mode="xquery" optimize="1">xquery version "1.0-ml";
+(: Create XDBC application server for loading data with mlcp :)
+
+import module namespace admin = "http://marklogic.com/xdmp/admin" at "/MarkLogic/admin.xqy";
+
+let $config := admin:get-configuration()
+let $groupid := admin:group-get-id($config, "Default")
+let $server := admin:xdbc-server-create(
+    $config, 
+    $groupid,
+    "top-songs-XDBC", 
+    "/",
+    8046,
+    0,
+    admin:database-get-id($config, "top-songs"))
+return admin:save-configuration($server);
+  
+(: Finished :)
+xquery version "1.0-ml";
+"XDBC App Server Created"</query><query name="Query 16" focus="false" listorder="16" taborder="16" active="true" database="9677369848798960539" server="13492416535972736312" database-name="top-songs" server-name="8040-top-songs" mode="xquery" optimize="1">xquery version "1.0-ml";
+declare namespace functx = "http://www.functx.com";
+
+(: fn:adjust-date-to-timezone(fn:current-dateTime(),xs:dayTimeDuration("P2D"))
+
+fn:adjust-dateTime-to-timezone(
+    xs:dateTime("2002-03-07T10:00:00-07:00"),
+    xs:dayTimeDuration("PT10H"))
+
+sql:dateadd("day",100,fn:current-date()):)
+
+fn:add-months('2005-12-31',-3)
+</query><query name="Query 17" focus="false" listorder="17" taborder="17" active="true" database="9677369848798960539" server="13492416535972736312" database-name="top-songs" server-name="8040-top-songs" mode="xquery" optimize="1">xquery version "1.0-ml";
+fn:current-date() + xs:dayTimeDuration("P1D")</query><query name="Query 18" focus="false" listorder="18" taborder="18" active="true" database="5505543965037030129" server="4586327928347208055" database-name="Documents" server-name="App-Services" mode="xquery" optimize="1">xquery version "1.0-ml";
+cts:values(cts:element-reference(xs:QName("year")))</query><query name="Query 19" focus="false" listorder="19" taborder="19" active="true" database="5505543965037030129" server="4586327928347208055" database-name="Documents" server-name="App-Services" mode="xquery" optimize="1">xquery version "1.0-ml";
+cts:values(cts:element-reference(xs:QName("BookName")),(),("descending"),(),6.0,xdmp:forest("mlp1"))</query><query name="Query 20" focus="false" listorder="20" taborder="20" active="true" database="5505543965037030129" server="4586327928347208055" database-name="Documents" server-name="App-Services" mode="xquery" optimize="1">xquery version "1.0-ml";
+cts:values(cts:element-reference(xs:QName("BookName")),("The Da Vinci Code"),("descending"),cts:word-query("The"),5.0,xdmp:forest("mlp1"))</query><query name="Query 21" focus="false" listorder="21" taborder="21" active="true" database="5505543965037030129" server="4586327928347208055" database-name="Documents" server-name="App-Services" mode="xquery" optimize="1">xquery version "1.0-ml";
+xdmp:filesystem-directory("C:\Users\Nanda Kumar Lokesh\Documents")</query><query name="Query 22" focus="false" listorder="22" taborder="22" active="true" database="5505543965037030129" server="4586327928347208055" database-name="Documents" server-name="App-Services" mode="xquery" optimize="1">xquery version "1.0-ml";
+import module namespace admin = "http://marklogic.com/xdmp/admin"at "/MarkLogic/admin.xqy";
+let $config := admin:get-configuration()
+let $config := admin:database-attach-forest(
+  $config,
+  xdmp:database("Documents"), 
+  xdmp:forest("mlp1"))
+return admin:save-configuration($config);</query><query name="Query 23" focus="false" listorder="23" taborder="23" active="true" database="5505543965037030129" server="4586327928347208055" database-name="Documents" server-name="App-Services" mode="xquery" optimize="1">xquery version "1.0-ml";
+let $quality := xdmp:document-get-quality("/Books/Book7")
+
+return $quality</query><query name="Query 24" focus="false" listorder="24" taborder="24" active="true" database="5505543965037030129" server="4586327928347208055" database-name="Documents" server-name="App-Services" mode="xquery" optimize="1">xquery version "1.0-ml";
+cts:search(collection("Books"),(),("unfiltered"),5.0,xdmp:forest("mlp1"))</query><query name="Query 25" focus="false" listorder="25" taborder="25" active="true" database="5505543965037030129" server="4586327928347208055" database-name="Documents" server-name="App-Services" mode="xquery" optimize="1">xquery version "1.0-ml";
+cts:value-match(cts:element-reference(xs:QName("BookName")), "The*", ("descending"), cts:word-query("The"), 0.0, xdmp:forest("mlp1"))</query><query name="Query 26" focus="true" listorder="26" taborder="26" active="true" database="5505543965037030129" server="4586327928347208055" database-name="Documents" server-name="App-Services" mode="xquery" optimize="1">xquery version "1.0-ml";
+
+cts:path-range-query(
+   collection("Books")/tXML,
+   "&gt;",
+   "Bla"
+)
+</query></workspace></export>
