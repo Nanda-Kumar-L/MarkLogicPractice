@@ -1,0 +1,101 @@
+<export><workspace name="Workspace 4"><query name="Document Insert" focus="false" listorder="1" taborder="1" active="true" database="2491852892614440568" server="4586327928347208055" database-name="mlp" server-name="App-Services" mode="xquery" optimize="1">xquery version "1.0-ml";
+
+xdmp:document-insert("XML/Library/Book",
+&lt;library&gt;
+  &lt;book&gt;
+    &lt;title&gt;book-1&lt;/title&gt;
+    &lt;author&gt;Author 1&lt;/author&gt;
+    &lt;year&gt;2019&lt;/year&gt;
+  &lt;/book&gt;
+  &lt;book&gt;
+    &lt;title&gt;book 2&lt;/title&gt;
+    &lt;author&gt;Author 2&lt;/author&gt;
+    &lt;year&gt;2023&lt;/year&gt;
+  &lt;/book&gt;
+  &lt;book&gt;
+    &lt;title&gt;book 3&lt;/title&gt;
+    &lt;author&gt;Author 1&lt;/author&gt;
+    &lt;year&gt;2020&lt;/year&gt;
+  &lt;/book&gt;
+  &lt;book&gt;
+    &lt;title&gt;book 4&lt;/title&gt;
+    &lt;author&gt;Author 1&lt;/author&gt;
+    &lt;year&gt;2022&lt;/year&gt;
+  &lt;/book&gt;
+  &lt;book&gt;
+    &lt;title&gt;book 5&lt;/title&gt;
+    &lt;author&gt;Author 2&lt;/author&gt;
+    &lt;year&gt;2023&lt;/year&gt;
+  &lt;/book&gt;
+  &lt;book&gt;
+    &lt;title&gt;book 6&lt;/title&gt;
+    &lt;author&gt;Author 1&lt;/author&gt;
+    &lt;year&gt;2020&lt;/year&gt;
+  &lt;/book&gt;
+&lt;/library&gt;
+,
+&lt;options xmlns="xdmp:document-insert"&gt;
+&lt;collections&gt;
+&lt;collection&gt;UCBOS&lt;/collection&gt;  
+&lt;/collections&gt;
+&lt;/options&gt;
+)
+</query><query name="Document Rename" focus="false" listorder="2" taborder="2" active="true" database="2491852892614440568" server="4586327928347208055" database-name="mlp" server-name="App-Services" mode="xquery" optimize="1">xquery version "1.0-ml";
+(:Document rename:)
+
+ xdmp:document-insert("/UCBOS/Library/Book", fn:doc("XML/Library/Book")),
+      xdmp:document-delete("XML/Library/Book")</query><query name="Reading From Other Database" focus="false" listorder="3" taborder="4" active="true" database="2491852892614440568" server="4586327928347208055" database-name="mlp" server-name="App-Services" mode="xquery" optimize="1">xquery version "1.0-ml";
+
+declare namespace doc = "http://marklogic.com/xdmp/document";
+declare variable $query := "fn:doc('XML/Library/Book')";
+
+
+let $database-id := xdmp:database("Modules")
+return
+  xdmp:eval($query,
+    (),
+    &lt;options xmlns="xdmp:eval"&gt;
+      &lt;database&gt;{ $database-id }&lt;/database&gt;
+    &lt;/options&gt;
+  )
+</query><query name="Deleting Books" focus="false" listorder="4" taborder="5" active="true" database="2491852892614440568" server="4586327928347208055" database-name="mlp" server-name="App-Services" mode="xquery" optimize="1">xquery version "1.0-ml";
+xdmp:node-delete(doc("XML/Library/Book")/library/book[year lt 2022]);
+
+fn:doc()</query><query name="Adding to Collection" focus="false" listorder="5" taborder="3" active="true" database="2491852892614440568" server="4586327928347208055" database-name="mlp" server-name="App-Services" mode="xquery" optimize="1">xquery version "1.0-ml";
+
+xdmp:document-add-collections(
+   "/UCBOS/Library/Book",
+   ("Book","UCBOS")
+)
+</query><query name="Adding Books" focus="false" listorder="6" taborder="6" active="true" database="2491852892614440568" server="4586327928347208055" database-name="mlp" server-name="App-Services" mode="xquery" optimize="1">xquery version "1.0-ml";
+xdmp:node-insert-child(
+   doc('XML/Library/Book')/library,
+   &lt;book&gt;
+       &lt;title&gt;book 6&lt;/title&gt;
+       &lt;author&gt;Author 101&lt;/author&gt;
+       &lt;year&gt;2023&lt;/year&gt;
+   &lt;/book&gt;
+),
+fn:doc()</query><query name="Adding element" focus="false" listorder="7" taborder="7" active="true" database="2491852892614440568" server="4586327928347208055" database-name="mlp" server-name="App-Services" mode="xquery" optimize="1">xquery version "1.0-ml";
+for $x at $i in fn:doc('XML/Library/Book')/library/book
+let $n := xdmp:random(100)
+return xdmp:node-insert-child(
+   $x,
+   &lt;price&gt;{$n}&lt;/price&gt;
+),
+fn:doc()</query><query name="Updating Author" focus="false" listorder="8" taborder="8" active="true" database="2491852892614440568" server="4586327928347208055" database-name="mlp" server-name="App-Services" mode="xquery" optimize="1">xquery version "1.0-ml";
+
+for $x in fn:doc('XML/Library/Book')/library/book/author
+let $au := $x/string()
+return xdmp:node-replace(
+   $x,
+   &lt;author&gt;{fn:lower-case($au)}&lt;/author&gt;
+),
+fn:doc()</query><query name="Query 12" focus="false" listorder="9" taborder="9" active="true" database="5505543965037030129" server="4586327928347208055" database-name="Documents" server-name="App-Services" mode="xquery" optimize="1">xquery version "1.0-ml";
+cts:uris("/abcd",("descending"),cts:element-query(xs:QName("Pages"),"489"))</query><query name="Query 13" focus="false" listorder="10" taborder="10" active="true" database="5505543965037030129" server="4586327928347208055" database-name="Documents" server-name="App-Services" mode="xquery" optimize="1">xquery version "1.0-ml";
+(:
+   to display 
+:)
+cts:search(fn:doc(),cts:word-query("The"))
+</query><query name="Query 14" focus="true" listorder="11" taborder="11" active="true" database="5505543965037030129" server="4586327928347208055" database-name="Documents" server-name="App-Services" mode="xquery" optimize="1">xquery version "1.0-ml";
+xdmp:crypt("admin","admin")</query></workspace></export>
