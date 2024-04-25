@@ -1,0 +1,244 @@
+
+Creation =>
+
+xquery version "1.0-ml";
+declare function local:randomCountry($seq as item()*) as item()* {
+  let $index := xdmp:random(4)
+  return subsequence($seq, $index+1, 1)
+};
+
+for $i in (1 to 10)
+return xdmp:document-insert('Customer/'||$i,
+<CustomerDetails>
+        <customerID>{concat('c',100+$i)}</customerID>
+        <customerName>{concat('customer',$i)}</customerName>
+        <email>{concat('customer',$i,'@gmail.com')}</email>
+        <phoneNo>{8000000000+$i*1000000}</phoneNo>
+        <country>{local:randomCountry(("India","US","Japan","Germany","Australia"))}</country>
+</CustomerDetails>,
+<options xmlns="xdmp:document-insert">
+<collections>
+<collection>Customer</collection>
+</collections>
+</options>
+)
+
+xquery version "1.0-ml";
+declare function local:randomStatus($seq as item()*) as item()* {
+  let $index := xdmp:random(4)
+  return subsequence($seq, $index+1, 1)
+};
+for $i in (1 to 10)
+for $j in (1 to 10)
+return xdmp:document-insert('Order/'||(($i*10+$j)-10),
+
+<OrderDetails>
+  <orderID>{concat('order',100000+(($i*10+$j)-10)*100)}</orderID>
+  <customerID>{concat('c',100+$i)}</customerID>
+  <customerName>{concat('customer',$i)}</customerName>
+  <orderDate>{xs:date("2024-04-20") + xs:dayTimeDuration(concat("P",xdmp:random(30),"D"))}</orderDate>
+  <orderStatus>{local:randomStatus(("Pending","Processing","Shipped","Delivered","Cancelled"))}</orderStatus>
+  <orderTotal>{1000+xdmp:random(5000)+xdmp:random(1000)}</orderTotal>
+</OrderDetails>,
+    
+<options xmlns="xdmp:document-insert">
+<collections>
+<collection>Order</collection>
+</collections>
+</options>
+)
+
+<---------------------------------------------------------------------------------------------------------------------->
+
+Crosslinking =>
+
+xquery version "1.0-ml";
+  for $i in cts:uri-match("Customer/*")
+  return <result>
+    <customerURI>{$i}</customerURI>
+    <crosslinked_URIS>{
+      for $j in cts:uri-match(
+                  "Order*", (),  
+                  cts:and-query((
+                    cts:collection-query("Order"),
+                    cts:and-query((
+                    cts:path-range-query(
+                      '/OrderDetails/customerID',
+                      "=",
+                      cts:search(/CustomerDetails/customerID,cts:document-query($i))/string()
+                      ),
+                     cts:path-range-query(
+                      '/OrderDetails/customerName',
+                      "=",
+                      cts:search(/CustomerDetails/customerName,cts:document-query($i))/string()
+                      ) 
+                      ))
+                    ))
+                    )
+      return <order>{$j}</order>
+    }</crosslinked_URIS>
+ </result>
+
+<--------------------------------------------------------------------------------------------------------------->
+
+Result =>
+
+<result>
+<customerURI>Customer/1</customerURI>
+<crosslinked_URIS>
+<order>Order/1</order>
+<order>Order/10</order>
+<order>Order/2</order>
+<order>Order/3</order>
+<order>Order/4</order>
+<order>Order/5</order>
+<order>Order/6</order>
+<order>Order/7</order>
+<order>Order/8</order>
+<order>Order/9</order>
+</crosslinked_URIS>
+</result>
+
+<result>
+<customerURI>Customer/10</customerURI>
+<crosslinked_URIS>
+<order>Order/100</order>
+<order>Order/91</order>
+<order>Order/92</order>
+<order>Order/93</order>
+<order>Order/94</order>
+<order>Order/95</order>
+<order>Order/96</order>
+<order>Order/97</order>
+<order>Order/98</order>
+<order>Order/99</order>
+</crosslinked_URIS>
+</result>
+
+<result>
+<customerURI>Customer/2</customerURI>
+<crosslinked_URIS>
+<order>Order/11</order>
+<order>Order/12</order>
+<order>Order/13</order>
+<order>Order/14</order>
+<order>Order/15</order>
+<order>Order/16</order>
+<order>Order/17</order>
+<order>Order/18</order>
+<order>Order/19</order>
+<order>Order/20</order>
+</crosslinked_URIS>
+</result>
+
+<result>
+<customerURI>Customer/3</customerURI>
+<crosslinked_URIS>
+<order>Order/21</order>
+<order>Order/22</order>
+<order>Order/23</order>
+<order>Order/24</order>
+<order>Order/25</order>
+<order>Order/26</order>
+<order>Order/27</order>
+<order>Order/28</order>
+<order>Order/29</order>
+<order>Order/30</order>
+</crosslinked_URIS>
+</result>
+
+<result>
+<customerURI>Customer/4</customerURI>
+<crosslinked_URIS>
+<order>Order/31</order>
+<order>Order/32</order>
+<order>Order/33</order>
+<order>Order/34</order>
+<order>Order/35</order>
+<order>Order/36</order>
+<order>Order/37</order>
+<order>Order/38</order>
+<order>Order/39</order>
+<order>Order/40</order>
+</crosslinked_URIS>
+</result>
+
+<result>
+<customerURI>Customer/5</customerURI>
+<crosslinked_URIS>
+<order>Order/41</order>
+<order>Order/42</order>
+<order>Order/43</order>
+<order>Order/44</order>
+<order>Order/45</order>
+<order>Order/46</order>
+<order>Order/47</order>
+<order>Order/48</order>
+<order>Order/49</order>
+<order>Order/50</order>
+</crosslinked_URIS>
+</result>
+
+<result>
+<customerURI>Customer/6</customerURI>
+<crosslinked_URIS>
+<order>Order/51</order>
+<order>Order/52</order>
+<order>Order/53</order>
+<order>Order/54</order>
+<order>Order/55</order>
+<order>Order/56</order>
+<order>Order/57</order>
+<order>Order/58</order>
+<order>Order/59</order>
+<order>Order/60</order>
+</crosslinked_URIS>
+</result>
+
+<result>
+<customerURI>Customer/7</customerURI>
+<crosslinked_URIS>
+<order>Order/61</order>
+<order>Order/62</order>
+<order>Order/63</order>
+<order>Order/64</order>
+<order>Order/65</order>
+<order>Order/66</order>
+<order>Order/67</order>
+<order>Order/68</order>
+<order>Order/69</order>
+<order>Order/70</order>
+</crosslinked_URIS>
+</result>
+
+<result>
+<customerURI>Customer/8</customerURI>
+<crosslinked_URIS>
+<order>Order/71</order>
+<order>Order/72</order>
+<order>Order/73</order>
+<order>Order/74</order>
+<order>Order/75</order>
+<order>Order/76</order>
+<order>Order/77</order>
+<order>Order/78</order>
+<order>Order/79</order>
+<order>Order/80</order>
+</crosslinked_URIS>
+</result>
+
+<result>
+<customerURI>Customer/9</customerURI>
+<crosslinked_URIS>
+<order>Order/81</order>
+<order>Order/82</order>
+<order>Order/83</order>
+<order>Order/84</order>
+<order>Order/85</order>
+<order>Order/86</order>
+<order>Order/87</order>
+<order>Order/88</order>
+<order>Order/89</order>
+<order>Order/90</order>
+</crosslinked_URIS>
+</result>

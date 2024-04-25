@@ -1,0 +1,105 @@
+Creation =>
+
+xquery version "1.0-ml";
+
+xdmp:document-insert('SpecialtyRetailerItem/Record1',
+<rec1> 
+  <GlobalMasterItemId>UCBOS1</GlobalMasterItemId>
+  <Item>SKUA</Item>
+  <AlternateItemNo>SKUB</AlternateItemNo>
+</rec1>,
+<options xmlns="xdmp:document-insert">
+<collections>
+<collection>SpecialtyRetailerItem</collection>
+</collections>
+</options>
+),
+xdmp:document-insert('SpecialtyRetailerItem/Record2',
+<rec2> 
+  <GlobalMasterItemId>UCBOS2</GlobalMasterItemId>
+  <Item>SKUB</Item>
+  <AlternateItemNo></AlternateItemNo>
+</rec2>,
+<options xmlns="xdmp:document-insert">
+<collections>
+<collection>SpecialtyRetailerItem</collection>
+</collections>
+</options>
+),
+xdmp:document-insert('Enterprise Inventory/Record1',
+<rec1> 
+  <ItemNumber>SKUA</ItemNumber>
+  <Qty>10</Qty>
+  <Status>Available</Status>
+</rec1>,
+<options xmlns="xdmp:document-insert">
+<collections>
+<collection>Enterprise Inventory</collection>
+</collections>
+</options>
+),
+xdmp:document-insert('Enterprise Inventory/Record2',
+<rec2> 
+  <ItemNumber>SKUB</ItemNumber>
+  <Qty>30</Qty>
+  <Status>Available</Status>
+</rec2>,
+<options xmlns="xdmp:document-insert">
+<collections>
+<collection>Enterprise Inventory</collection>
+</collections>
+</options>
+)
+
+
+
+
+Query =>
+
+xquery version "1.0-ml";
+
+let $specialtyRetailerItems := collection("SpecialtyRetailerItem")/(*)
+let $enterpriseInventoryItems := collection("Enterprise Inventory")/(*)
+
+return
+  <result>{
+    for $sri in $specialtyRetailerItems
+    let $globalMasterItemId := $sri/GlobalMasterItemId
+    let $item := $sri/Item
+    let $alternateItemNo := $sri/AlternateItemNo
+    let $Qty :=
+      if ($alternateItemNo)
+      then sum(($enterpriseInventoryItems[ItemNumber = $item]/Qty, $enterpriseInventoryItems[ItemNumber = $alternateItemNo]/Qty))
+      else sum($enterpriseInventoryItems[ItemNumber = $item]/Qty)
+    let $status := $enterpriseInventoryItems[ItemNumber = $item]/Status
+    return
+      <Record>{
+        <GlobalMasterItemId>{data($globalMasterItemId)}</GlobalMasterItemId>,
+        <ItemNumber>{data($item)}</ItemNumber>,
+        <AlternateItemNo>{data($alternateItemNo)}</AlternateItemNo>,
+        <Qty>{$Qty}</Qty>,
+        <Status>{data($status)}</Status>
+      }</Record>
+  }</result>
+
+
+
+Output=>
+
+<result>
+	<Record>
+		<GlobalMasterItemId>UCBOS1</GlobalMasterItemId>
+		<ItemNumber>SKUA</ItemNumber>
+		<AlternateItemNo>SKUB</AlternateItemNo>
+		<Qty>40</Qty>
+		<Status>Available</Status>
+	</Record>
+	<Record>
+		<GlobalMasterItemId>UCBOS2</GlobalMasterItemId>
+		<ItemNumber>SKUB</ItemNumber>
+		<AlternateItemNo>
+		</AlternateItemNo>
+		<Qty>30</Qty>
+		<Status>Available</Status>
+	</Record>
+</result>
