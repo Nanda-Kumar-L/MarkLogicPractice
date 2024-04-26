@@ -1,0 +1,67 @@
+Assignment-8
+
+Q)Create Few Records of any collection, add a date field to it with no value, then randomly add date to each of the records from a list of values.
+Then Group the Records based on the added Date.
+<----------------------------------------------------------------->
+
+Creation =>
+
+xquery version "1.0-ml";
+
+declare function local:randomSelect($seq as item()*) as item()* {
+  let $index := xdmp:random(count($seq)-1)
+  return subsequence($seq, $index+1, 1)
+};
+
+for $i in (1 to 100)
+
+let $brands := ("Toyota", "Ford", "BMW", "Honda", "Chevrolet")
+let $models := ("Corolla","Mustang", "3 Series", "Civic", "Silverado")
+let $colors := ("Red","Blue","White","Black","Silver")
+let $prices := (20000,30000,15000,25000,40000)
+
+return xdmp:document-insert('/Cars/'||$i,
+
+  <Car>
+    <carID>{1000+$i*1}</carID>
+    <brand>{local:randomSelect($brands)}</brand>
+    <model>{local:randomSelect($models)}</model>
+    <color>{local:randomSelect($colors)}</color>
+    <price>{local:randomSelect($prices)}</price>
+    <date></date>
+  </Car>, 
+  
+  <options xmlns="xdmp:document-insert">
+    <collections>
+      <collection>Cars</collection>
+    </collections>
+  </options>
+)
+
+<----------------------------------------------------------------------------------------->
+
+Query =>
+
+xquery version "1.0-ml";
+
+declare function local:randomSelect($seq as item()*) as item()* {
+  let $index := xdmp:random(count($seq)-1)
+  return subsequence($seq, $index+1, 1)
+};
+
+
+let $dateList := (xs:date("2020-12-01"),xs:date("2023-05-23"),xs:date("2021-08-21"),xs:date("2017-06-23"),xs:date("2019-12-30"),xs:date("2015-10-05"),xs:date("2024-12-03"),xs:date("2016-05-23"))
+
+let $a:=
+  (for $i in (1 to 100)
+    return xdmp:node-replace(doc('/Cars/'||$i)/Car/date,
+      <date>{local:randomSelect($dateList)}</date>)
+)
+  
+let $b:=(
+  for $date in fn:distinct-values(collection('Cars')/Car/date)
+    let $cars := (collection('Cars')/Car[./date eq $date])
+     return element result{element date{$date}, element Cars{$cars}}
+)
+
+return ($a,$b)

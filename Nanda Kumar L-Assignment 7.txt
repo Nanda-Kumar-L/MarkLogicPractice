@@ -1,0 +1,96 @@
+xquery version "1.0-ml";
+
+'{
+  "condition": "and",
+  "rules": [
+    {"field": "C1", "operator": null},
+    {"field": "C2", "operator": null},
+    {
+      "condition": "or",
+      "rules": [
+        {
+          "condition": "and",
+          "rules": [
+            {"field": "C3", "operator": null},
+            {"field": "C6", "operator": null}
+          ]
+        },
+        {
+          "condition": "and",
+          "rules": [
+            {"field": "C4", "operator": null},
+            {"field": "C5", "operator": null}
+          ]
+        }
+      ]
+    }
+  ]
+}',
+
+
+cts:and-query((
+    cts:element-query(xs:QName("C1"), cts:true-query()),
+    cts:element-query(xs:QName("C2"), cts:true-query()),
+    cts:or-query((
+        cts:and-query((
+            cts:element-query(xs:QName("C3"), cts:true-query()),
+            cts:element-query(xs:QName("C6"), cts:true-query())
+        )),
+        cts:and-query((
+            cts:element-query(xs:QName("C4"), cts:true-query()),
+            cts:element-query(xs:QName("C5"), cts:true-query())
+        ))
+    ))
+))
+
+
+
+
+xquery version "1.0-ml";
+'{
+  "condition": "and",
+  "rules": [
+    {"field": "C1", "operator": "eq", "value": "some_value"},
+    {"field": "C2", "operator": "like", "value": "%pattern%"},
+    {
+      "condition": "or",
+      "rules": [
+        {
+          "condition": "and",
+          "rules": [
+            {"field": "C3", "operator": "gt", "value": 10},
+            {"field": "C6", "operator": "lt", "value": 20}
+          ]
+        },
+        {
+          "condition": "and",
+          "rules": [
+            {"field": "C4", "operator": "exists"},
+            {"field": "C5", "operator": "ne", "value": "exclude_value"}
+          ]
+        }
+      ]
+    }
+  ]
+}',
+
+cts:and-query((
+  cts:element-query(xs:QName("C1"),cts:path-range-query(/C1, "=", "some_value")),
+  cts:element-value-match(xs:QName("C2"),"*pattern*"),
+  
+  cts:or-query((
+    cts:and-query((
+      cts:element-query(xs:QName("C3"),cts:path-range-query(/C3, ">", "10")),
+      cts:element-query(xs:QName("C6"),cts:path-range-query(/C6, "<", "2"))
+      )),
+    cts:and-query((
+      cts:and-query((
+        cts:element-query(xs:QName("C4"), cts:exists-query()),
+        cts:not-query(cts:element-value-query(xs:QName("C4"), ""))
+        )),
+      cts:element-query(xs:QName("C5"),cts:path-range-query(/C5, "!=", "exclude_value"))
+    ))
+  
+  ))
+  
+))
