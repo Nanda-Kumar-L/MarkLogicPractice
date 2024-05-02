@@ -4,71 +4,64 @@ let $json2 := '((C1 and C2) or C3)'
 cts:or((cts:and-query((cts:path, cts:path)), cts:path))
 :)
 
-declare function local:convert($input as xs:string) as xs:string {
-  let $map := map:map()
-  let $_ := map:put($map, "and", 'cts:and-query')
-  let $_ := map:put($map, "or", "cts:or-query")
-  let $_ := map:put($map, "{", "(")
-  let $_ := map:put($map, "[", "(")
-  let $_ := map:put($map, "}", ")")
-  let $_ := map:put($map, "]", ")")
-  let $_ := map:put($map, '"', "")
-  let $_ := map:put($map, 'condition', "")
-  let $_ := map:put($map, ':', "")
-  let $_ := map:put($map, 'field', "cts:path-range-query(/")
-  let $_ := map:put($map, 'operator', "")
-  let $_ := map:put($map, 'null', "")
-  let $_ := map:put($map, 'rules', "")
-  let $tokens := cts:tokenize($input)
-  let $converted := 
-    for $i at $x in $tokens
-    return
-      if (map:contains($map, $i)) then
-      
-        if(map:get($map, $i)) then 
-           if($tokens[$x]='{' and ($tokens[($x)-2]='}' or $x=1)) then ""
-           else map:get($map, $i)
-        else
-        map:get($map, $i)
-      else if($i=',') then
-          if($tokens[$x+1]='{') then
-            "," else ""
-      else
-        $i
-  return fn:string-join($converted, "")
+declare function local:json-to-cts($json as map:map){
+  let $condition := map:get($json, "condition")
+  let $rules := map:get($json, "rules")
+  return 
+    if ($condition eq "and") then
+      cts:and-query(
+        for $rule at $x in json:array-values($rules)
+        return
+          if (map:contains($rule, "condition")) then
+            local:json-to-cts($rule)
+          else(
+               cts:path-range-query(map:get($rule, "field"), map:get($rule, "operator"), map:get($rule, "value"))
+            )
+      )
+    else if ($condition eq "or") then
+      cts:or-query(
+        for $rule at $x in json:array-values($rules)
+        return
+          if (map:contains($rule, "condition")) then
+            local:json-to-cts($rule)
+          else(
+              cts:path-range-query(map:get($rule, "field"), map:get($rule, "operator"), map:get($rule, "value"))
+            )
+      )
+      else ()
 };
 
-let $json_ori :='{
+
+let $JSON := xdmp:from-json-string('{
   "condition": "and",
   "rules": [
-    {"field": "C1", "operator": null},
-    {"field": "C2", "operator": null},
+    {"field": "C1", "operator": "=", "value": "some_value"},
+    {"field": "C2", "operator": ">=", "value": "some_value"},
     {
       "condition": "or",
       "rules": [
         {
           "condition": "and",
           "rules": [
-            {"field": "C3", "operator": null},
-            {"field": "C6", "operator": null}
+            {"field": "C3", "operator": ">", "value": 10},
+            {"field": "C6", "operator": "<", "value": 20}
           ]
         },
         {
           "condition": "and",
           "rules": [
-            {"field": "C4", "operator": null},
-            {"field": "C5", "operator": null}
+            {"field": "C4", "operator": "<=", "value": 50},
+            {"field": "C5", "operator": "!=", "value": "exclude_value"}
           ]
         }
       ]
     }
   ]
-}'
+}')
 
-let $json := fn:string-join(fn:tokenize(fn:normalize-space(fn:string-join(fn:tokenize($json_ori, " "),
-               "")), " "),
-               "")
-               
-return local:convert($json)
+let $cts-query := local:json-to-cts($JSON)
+return
+  $cts-query
+
 
 
