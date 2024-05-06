@@ -1,0 +1,175 @@
+xquery version "1.0-ml";
+
+declare function local:json-to-xml($json as map:map){
+  let $keys := map:keys($json)
+  for $i in $keys
+  let $value := map:get($json,$i)
+  return
+  (
+  element {$i}{
+    if(xdmp:type($value) eq xs:QName('json:object')) then
+      local:json-to-xml($value)
+    else if(xs:string(xdmp:type($value)) eq 'array') then
+        for $j in json:array-values($value)
+        return 
+        (element item{
+          if(xdmp:type($j) eq xs:QName('json:object')) then
+            local:json-to-xml($j)
+          else if(xs:string(xdmp:type($j)) eq 'array') then
+              for $k in json:array-values($j)
+              return 
+              (
+                 $k
+              )
+          else $j}
+        )
+    else $value}
+  )
+};
+
+
+let $JSON := xdmp:from-json-string('{
+    "labelResponseOptions": "URL_ONLY",
+    "requestedShipment": {
+        "shipper": {
+            "contact": {
+                "personName": "SHIPPER NAME",
+                "phoneNumber": 1234567890,
+                "companyName": "Shipper Company Name"
+            },
+            "address": {
+                "streetLines": [
+                    "SHIPPER STREET LINE 1"
+                ],
+                "city": "HARRISON",
+                "stateOrProvinceCode": "AR",
+                "postalCode": 72601,
+                "countryCode": "US"
+            }
+        },
+        "recipients": [
+            {
+                "contact": {
+                    "personName": "RECIPIENT NAME",
+                    "phoneNumber": 1234567890,
+                    "companyName": "Recipient Company Name"
+                },
+                "address": {
+                    "streetLines": [
+                        "RECIPIENT STREET LINE 1",
+                        "RECIPIENT STREET LINE 2"
+                    ],
+                    "city": "Collierville",
+                    "stateOrProvinceCode": "TN",
+                    "postalCode": 38017,
+                    "countryCode": "US"
+                }
+            }
+        ],
+        "shipDatestamp": "2023-05-17",
+        "serviceType": "FEDEX_EXPRESS_SAVER",
+        "packagingType": "FEDEX_SMALL_BOX",
+        "pickupType": "USE_SCHEDULED_PICKUP",
+        "blockInsightVisibility": false,
+        "shippingChargesPayment": {
+            "paymentType": "SENDER"
+        },
+        "shipmentSpecialServices": {
+            "specialServiceTypes": [
+                "FEDEX_ONE_RATE"
+            ]
+        },
+        "labelSpecification": {
+            "imageType": "PDF",
+            "labelStockType": "PAPER_85X11_TOP_HALF_LABEL"
+        },
+        "requestedPackageLineItems": [
+            {
+                "declaredValue": {
+                    "amount": 200,
+                    "currency": "USD"
+                }
+            }
+        ]
+    },
+    "accountNumber": {
+        "value": "740561073"
+    }
+}')
+
+let $xml := local:json-to-xml($JSON)
+return
+  element json{$xml}
+
+
+
+Output:
+
+<json>
+<labelResponseOptions>URL_ONLY</labelResponseOptions>
+<requestedShipment>
+<shipper>
+<contact>
+<personName>SHIPPER NAME</personName>
+<phoneNumber>1234567890</phoneNumber>
+<companyName>Shipper Company Name</companyName>
+</contact>
+<address>
+<streetLines>
+<item>SHIPPER STREET LINE 1</item>
+</streetLines>
+<city>HARRISON</city>
+<stateOrProvinceCode>AR</stateOrProvinceCode>
+<postalCode>72601</postalCode>
+<countryCode>US</countryCode>
+</address>
+</shipper>
+<recipients>
+<item>
+<contact>
+<personName>RECIPIENT NAME</personName>
+<phoneNumber>1234567890</phoneNumber>
+<companyName>Recipient Company Name</companyName>
+</contact>
+<address>
+<streetLines>
+<item>RECIPIENT STREET LINE 1</item>
+<item>RECIPIENT STREET LINE 2</item>
+</streetLines>
+<city>Collierville</city>
+<stateOrProvinceCode>TN</stateOrProvinceCode>
+<postalCode>38017</postalCode>
+<countryCode>US</countryCode>
+</address>
+</item>
+</recipients>
+<shipDatestamp>2023-05-17</shipDatestamp>
+<serviceType>FEDEX_EXPRESS_SAVER</serviceType>
+<packagingType>FEDEX_SMALL_BOX</packagingType>
+<pickupType>USE_SCHEDULED_PICKUP</pickupType>
+<blockInsightVisibility>false</blockInsightVisibility>
+<shippingChargesPayment>
+<paymentType>SENDER</paymentType>
+</shippingChargesPayment>
+<shipmentSpecialServices>
+<specialServiceTypes>
+<item>FEDEX_ONE_RATE</item>
+</specialServiceTypes>
+</shipmentSpecialServices>
+<labelSpecification>
+<imageType>PDF</imageType>
+<labelStockType>PAPER_85X11_TOP_HALF_LABEL</labelStockType>
+</labelSpecification>
+<requestedPackageLineItems>
+<item>
+<declaredValue>
+<amount>200</amount>
+<currency>USD</currency>
+</declaredValue>
+</item>
+</requestedPackageLineItems>
+</requestedShipment>
+<accountNumber>
+<value>740561073</value>
+</accountNumber>
+</json>
