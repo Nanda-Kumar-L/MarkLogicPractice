@@ -4,10 +4,9 @@ import module namespace json="http://marklogic.com/xdmp/json"
 
 declare function local:change-type($type as xs:string, $value as xs:anyAtomicType)
 {
-  if($type="integer") then
-    xs:integer($value)
-  else
-    xs:string($value)
+  xdmp:eval(
+    concat("xs:",$type,"(",$value,")")
+  )
 };
 
 declare function local:data-type-change($a as map:map,$b as map:map){
@@ -62,7 +61,7 @@ declare variable $JSON :='{
 "TransactionDate": "2024-04-01", 
 "lots": [
 {
-"TransactionQuantity": "101", 
+"TransactionQuantity": "222", 
 "LotExpirationDate": "2026-04-01", 
 "LotNumber": "SDS2043"
 }
@@ -79,7 +78,7 @@ declare variable $JSON1:='{
 	"SubinventoryCode": "Main Store",
 	"lots": [
 		{
-			"TransactionQuantity": 10,
+			"TransactionQuantity": 222,
 			"LotExpirationDate": "2024-03-31",
 			"LotNumber": "20240101"
 		}
