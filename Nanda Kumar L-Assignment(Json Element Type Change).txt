@@ -5,7 +5,11 @@ import module namespace json="http://marklogic.com/xdmp/json"
 declare function local:change-type($type as xs:string, $value as xs:anyAtomicType)
 {
   xdmp:eval(
-    concat("xs:",$type,"(",$value,")")
+    concat("xs:",$type,"(",
+    if(xs:string($value)="true") then 1
+    else if(xs:string($value)="false") then 0
+    else $value
+    ,")")
   )
 };
 
@@ -83,7 +87,7 @@ declare variable $JSON1:='{
 			"LotNumber": "20240101"
 		}
 	],
-	"UseCurrentCostFlag": "true",
+	"UseCurrentCostFlag": true,
 	"ItemNumber": "RM1001",
 	"TransactionQuantity": [10,"55",
     		{
@@ -112,7 +116,7 @@ OUTPUT:
 "SourceLineId": "7000", 
 "TransactionUnitOfMeasure": "UNITS", 
 "SubinventoryCode": "Main Store", 
-"UseCurrentCostFlag": "true", 
+"UseCurrentCostFlag": true, 
 "ItemNumber": "RM2001", 
 "TransactionQuantity": [
 101, 
@@ -127,7 +131,7 @@ OUTPUT:
 "TransactionHeaderId": "7000", 
 "TransactionDate": "2024-04-01", 
 "lots": {
-"TransactionQuantity": 101, 
+"TransactionQuantity": 222, 
 "LotExpirationDate": "2026-04-01", 
 "LotNumber": "SDS2043"
 }
