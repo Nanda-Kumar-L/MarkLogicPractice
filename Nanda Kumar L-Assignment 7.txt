@@ -1,38 +1,35 @@
 xquery version "1.0-ml";
-(:
-let $json2 := '((C1 and C2) or C3)'
-cts:or((cts:and-query((cts:path, cts:path)), cts:path))
-:)
 
-declare function local:json-to-cts($json as map:map){
+declare function local:json-to-cts($jsonString as xs:string) as xs:string {
+  let $json := xdmp:from-json-string($jsonString)
   let $condition := map:get($json, "condition")
   let $rules := map:get($json, "rules")
   return 
     if ($condition eq "and") then
-      cts:and-query(
-        for $rule at $x in json:array-values($rules)
-        return
-          if (map:contains($rule, "condition")) then
-            local:json-to-cts($rule)
-          else(
-               cts:path-range-query(map:get($rule, "field"), map:get($rule, "operator"), map:get($rule, "value"))
-            )
-      )
+      fn:concat("cts:and-query((",
+        fn:string-join(
+          for $rule at $x in json:array-values($rules)
+          return
+            if (map:contains($rule, "condition")) then
+              local:json-to-cts(xdmp:to-json-string($rule))
+            else
+              fn:concat("cts:path-range-query(/", xs:string(map:get($rule, "field")), ',"', xs:string(map:get($rule, "operator")), '","', xs:string(map:get($rule, "value")), '")')
+          , ", "), "))")
     else if ($condition eq "or") then
-      cts:or-query(
-        for $rule at $x in json:array-values($rules)
-        return
-          if (map:contains($rule, "condition")) then
-            local:json-to-cts($rule)
-          else(
-              cts:path-range-query(map:get($rule, "field"), map:get($rule, "operator"), map:get($rule, "value"))
-            )
-      )
-      else ()
+      fn:concat("cts:or-query((",
+        fn:string-join(
+          for $rule at $x in json:array-values($rules)
+          return
+            if (map:contains($rule, "condition")) then
+              local:json-to-cts(xdmp:to-json-string($rule))
+            else
+              fn:concat("cts:path-range-query(/", xs:string(map:get($rule, "field")), ',"', xs:string(map:get($rule, "operator")), '","', xs:string(map:get($rule, "value")), '")')
+          , ", "), "))")
+    else ""
 };
 
 
-let $JSON := xdmp:from-json-string('{
+let $JSON := '{
   "condition": "and",
   "rules": [
     {"field": "C1", "operator": "=", "value": "some_value"},
@@ -48,7 +45,7 @@ let $JSON := xdmp:from-json-string('{
           ]
         },
         {
-          "condition": "and",
+          "condition": "or",
           "rules": [
             {"field": "C4", "operator": "<=", "value": 50},
             {"field": "C5", "operator": "!=", "value": "exclude_value"}
@@ -57,7 +54,7 @@ let $JSON := xdmp:from-json-string('{
       ]
     }
   ]
-}')
+}'
 
 let $cts-query := local:json-to-cts($JSON)
 return
@@ -65,3 +62,6 @@ return
 
 
 
+
+OUTPUT:
+cts:and-query((cts:path-range-query(/C1,"=","some_value"), cts:path-range-query(/C2,">=","some_value"), cts:or-query((cts:and-query((cts:path-range-query(/C3,">","10"), cts:path-range-query(/C6,"<","20"))), cts:or-query((cts:path-range-query(/C4,"<=","50"), cts:path-range-query(/C5,"!=","exclude_value")))))))

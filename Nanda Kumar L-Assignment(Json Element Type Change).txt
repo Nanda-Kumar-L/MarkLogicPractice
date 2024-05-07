@@ -1,0 +1,135 @@
+xquery version "1.0-ml";
+import module namespace json="http://marklogic.com/xdmp/json"
+ at "/MarkLogic/json/json.xqy";
+
+declare function local:change-type($type as xs:string, $value as xs:anyAtomicType)
+{
+  if($type="integer") then
+    xs:integer($value)
+  else
+    xs:string($value)
+};
+
+declare function local:data-type-change($a as map:map,$b as map:map){
+  let $keys := map:keys($a)
+  for $i in $keys
+  let $value := map:get($a,$i)
+  return 
+    (if (xs:string(xdmp:type($value)) ne 'array') then
+      if (xdmp:type(map:get($a,$i)) ne xdmp:type(map:get($b,$i))) then
+        map:put($a,$i,local:change-type(xs:string(xdmp:type(map:get($b,$i))),(map:get($a,$i))))
+      else
+        ()
+    else
+      (
+        let $j := json:array-values(map:get($a,$i))
+        let $k := json:array-values(map:get($b,$i))
+        return 
+              let $var := 
+             (
+              for $m at $x in $j
+              return 
+                if(xdmp:type($m) ne xs:QName('json:object')) 
+                then 
+                    local:change-type(xs:string(xdmp:type($k[$x])),$m)
+                else
+                  local:data-type-change($m,$k[$x])
+             ) 
+         return map:put($a,$i,$var)
+       )
+    ),
+    $a
+};
+
+declare variable $JSON :='{
+"OrganizationName": "Alwazzan FSIG Snack", 
+"SourceCode": "7000", 
+"SourceHeaderId": "7000", 
+"TransactionTypeId": "42", 
+"SourceLineId": "7000", 
+"TransactionUnitOfMeasure": "UNITS", 
+"SubinventoryCode": "Main Store", 
+"UseCurrentCostFlag": "true", 
+"ItemNumber": "RM2001", 
+"TransactionQuantity": ["101",555,
+  		{
+			"TransactionQuantity": 10,
+			"LotExpirationDate": "2024-03-31",
+			"LotNumber": "20240101"
+		}],
+"TransactionMode": "3", 
+"TransactionHeaderId": "7000", 
+"TransactionDate": "2024-04-01", 
+"lots": [
+{
+"TransactionQuantity": "101", 
+"LotExpirationDate": "2026-04-01", 
+"LotNumber": "SDS2043"
+}
+]
+}';
+
+declare variable $JSON1:='{
+	"OrganizationName": "Alwazzan FSIG Snack",
+	"SourceCode": "7000",
+	"SourceHeaderId": 7000,
+	"TransactionTypeId": "42",
+	"SourceLineId": "7000",
+	"TransactionUnitOfMeasure": "UNITS",
+	"SubinventoryCode": "Main Store",
+	"lots": [
+		{
+			"TransactionQuantity": 10,
+			"LotExpirationDate": "2024-03-31",
+			"LotNumber": "20240101"
+		}
+	],
+	"UseCurrentCostFlag": "true",
+	"ItemNumber": "RM1001",
+	"TransactionQuantity": [10,"55",
+    		{
+			"TransactionQuantity": "10",
+			"LotExpirationDate": "2024-03-31",
+			"LotNumber": "20240101"
+		}],
+	"TransactionMode": "3",
+	"TransactionHeaderId": "7000",
+	"TransactionDate": "2024-04-01"
+}' ;
+
+let $a:= xdmp:from-json-string( $JSON)
+let $b:= xdmp:from-json-string($JSON1)
+return local:data-type-change($a,$b)
+
+
+
+OUTPUT:
+
+{
+"OrganizationName": "Alwazzan FSIG Snack", 
+"SourceCode": "7000", 
+"SourceHeaderId": 7000, 
+"TransactionTypeId": "42", 
+"SourceLineId": "7000", 
+"TransactionUnitOfMeasure": "UNITS", 
+"SubinventoryCode": "Main Store", 
+"UseCurrentCostFlag": "true", 
+"ItemNumber": "RM2001", 
+"TransactionQuantity": [
+101, 
+"555", 
+{
+"TransactionQuantity": "10", 
+"LotExpirationDate": "2024-03-31", 
+"LotNumber": "20240101"
+}
+], 
+"TransactionMode": "3", 
+"TransactionHeaderId": "7000", 
+"TransactionDate": "2024-04-01", 
+"lots": {
+"TransactionQuantity": 101, 
+"LotExpirationDate": "2026-04-01", 
+"LotNumber": "SDS2043"
+}
+}
