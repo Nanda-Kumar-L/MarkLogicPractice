@@ -1,0 +1,252 @@
+0) Total available appointment slots for loading    - X day(user to select)
+
+declare variable $days as xs:integer external;
+
+let $current-date := current-dateTime()
+let $end-date := $current-date + xs:dayTimeDuration(concat('P', xs:int($days), 'D'))
+
+let $appointments :=
+  for $appointment in doc("Appointments.xml")/Appointments/Appointment
+  where $appointment/AppointmentType = "Load" 
+        and xs:dateTime($appointment/ScheduledStartDateTime) >= $current-date
+        and xs:dateTime($appointment/ScheduledEndDateTime) <= $end-date
+  return $appointment
+
+let $total-appointments := count($appointments)
+
+return
+  element result {
+    element totalAppointments { $total-appointments },
+    for $appointment in $appointments
+    return element appointment {
+      element AppointmentId { $appointment/AppointmentId },
+      element ScheduledStartDateTime { $appointment/ScheduledStartDateTime },
+      element ScheduledEndDateTime { $appointment/ScheduledEndDateTime }
+    }
+  }
+
+
+
+
+
+
+
+
+
+
+1) Loading Appointment attached to 'A' Vessel - Group by Vessel Line Up
+
+let $appointments := collection('Appointment')
+let $shipmentsAndInventory := collection('Shipments and Inventory')
+
+let $rescheduledAppointments :=
+  for $appointment in $appointments
+  let $inventoryId := $appointment/InventoryId
+  let $rescheduleCount := count($appointment/RescheduleStatus[. = 'Cancelled'])
+  where $rescheduleCount > 1
+  order by $inventoryId
+  return
+    element Appointment {
+      element InventoryId { $inventoryId },
+      element Appointments {
+        for $confirmedAppointment in $appointments
+        where $confirmedAppointment/InventoryId = $inventoryId and $confirmedAppointment/Status = 'Confirmed'
+        return element AppointmentId { $confirmedAppointment/AppointmentId }
+      },
+      element RescheduleCount { $rescheduleCount }
+    }
+
+return element result { $rescheduledAppointments }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+2) Appointment attached to  Vessel / Vessel Line up but late for appointment  
+
+let $appointments := collection('Appointment')
+let $vesselLineupInventory := collection('Vessel Lineup Inventory')
+
+let $lateAppointments :=
+  for $appointment in $appointments
+  let $vesselId := $appointment/VesselId
+  let $lineUpId := $appointment/LineUpId
+  let $inventoryId := $appointment/InventoryId
+  let $appointmentType := $appointment/AppointmentType
+  let $appointmentId := $appointment/AppointmentId
+  let $scheduledStart := $appointment/ScheduledStartDateTime
+  let $scheduledEnd := $appointment/ScheduledEndDateTime
+  let $actualCheckIn := $appointment/ActualCheckInDateTime
+  where $appointmentType = "Load"
+        and xs:dateTime($actualCheckIn) > xs:dateTime($scheduledEnd)
+  return
+    element Appointment {
+      element VesselId { $vesselId },
+      element LineUpId { $lineUpId },
+      element InventoryId { $inventoryId },
+      element AppointmentType { $appointmentType },
+      element AppointmentId { $appointmentId },
+      element ScheduledStartDateTime { $scheduledStart },
+      element ScheduledEndDateTime { $scheduledEnd },
+      element ActualCheckInDateTime { $actualCheckIn }
+    }
+
+return element result { $lateAppointments }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+3) Shipments that are impacted by weather disruptions 
+
+let $impactedShipments :=
+  for $shipment in fn:collection("ShipmentsAndInventory")
+  let $routeId := $shipment/RouteId/text()
+  let $inventoryId := $shipment/InventoryId/text()
+  let $inventoryType := $shipment/InventoryType/text()
+  let $weatherDisruption := fn:doc("WeatherDisruption")//Disruption[Zip eq $routeId]
+  let $riverDisruption := fn:doc("RiverDisruption")//Disruption[RiverLocation eq $routeId]
+  where exists($weatherDisruption) or exists($riverDisruption)
+  return
+    if ((exists($weatherDisruption) and $weatherDisruption/DisruptionStatus != "Normal") or
+       (exists($riverDisruption) and $riverDisruption/DisruptionStatus != "Normal"))
+    then
+      element Shipment {
+        element InventoryId { $inventoryId },
+        element InventoryType { $inventoryType },
+        element RouteId { $routeId },
+        element WeatherDisruptionStatus { $weatherDisruption/DisruptionStatus },
+        element RiverDisruptionStatus { $riverDisruption/DisruptionStatus }
+      }
+    else ()
+
+let $cancelledCount :=
+  count(
+    for $impactedShipment in $impactedShipments
+    let $inventoryId := $impactedShipment/InventoryId
+    where count($impactedShipments[InventoryId eq $inventoryId and WeatherDisruptionStatus eq "Confirmed"]) eq 1
+    return $impactedShipment
+  )
+
+return
+  element Result {
+    element ImpactedShipments { $impactedShipments },
+    element CancelledCount { $cancelledCount }
+  }
+
+
+
+
+
+
+
+
+
+
+
+
+
+4) Total Appointments rescheduled more than once 
+
+let $rescheduledAppointments :=
+  for $appointment in fn:collection("Appointment")
+  let $inventoryId := $appointment/InventoryId/text()
+  let $appointmentId := $appointment/AppointmentId/text()
+  let $status := $appointment/AppointmentStatus/text()
+  where $status = "Cancelled"
+  return
+    if (count($appointment[InventoryId eq $inventoryId and AppointmentStatus eq "Confirmed"]) > 1)
+    then
+      element Appointment {
+        element InventoryId { $inventoryId },
+        element AppointmentId { $appointmentId },
+        element RescheduleCount { count($appointment[InventoryId eq $inventoryId and AppointmentStatus eq "Confirmed"]) - 1 }
+      }
+    else ()
+
+return
+  element Result {
+    element RescheduledAppointments { $rescheduledAppointments }
+  }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+5) Appointment not loaded before Xhrs of vessel departure time:
+4hrs before appt
+3hrs before appt
+2hrs before appt
+1hr  before appt
+
+let $appointments :=
+  for $appointment in fn:collection("Appointment")
+  let $vesselId := $appointment/VesselId/text()
+  let $inventoryId := $appointment/InventoryId/text()
+  let $scheduleStartDate := xs:dateTime($appointment/ScheduleStartDate/text())
+  let $scheduleEndDate := xs:dateTime($appointment/ScheduleEndDate/text())
+  let $appointmentId := $appointment/AppointmentId/text()
+  let $appointmentType := $appointment/AppointmentType/text()
+  let $appointmentStatus := $appointment/AppointmentStatus/text()
+  where $appointmentType eq "Load" and $appointmentStatus eq "Confirmed"
+  let $vesselJourney := fn:doc("VesselJourney")//Vessel[Id eq $vesselId]
+  return
+    if (fn:exists($vesselJourney) and xs:dateTime($vesselJourney/ExpectedVesselOriginDepartureDateTime/text()) gt $scheduleStartDate)
+    then
+      element Appointment {
+        element AppointmentId { $appointmentId },
+        element InventoryId { $inventoryId },
+        element ScheduleStartDateTime { $scheduleStartDate },
+        element ScheduleEndDateTime { $scheduleEndDate },
+        element VesselId { $vesselId },
+        element VesselName { $vesselJourney/VesselName/text() },
+        element ExpectedVesselOriginDepartureDateTime { $vesselJourney/ExpectedVesselOriginDepartureDateTime/text() }
+      }
+    else ()
+
+let $appointments4HrsBefore := $appointments[xs:dateTime(ExpectedVesselOriginDepartureDateTime) le xs:dateTime(ScheduleStartDateTime) - xs:dayTimeDuration('PT4H')]
+let $appointments3HrsBefore := $appointments[xs:dateTime(ExpectedVesselOriginDepartureDateTime) le xs:dateTime(ScheduleStartDateTime) - xs:dayTimeDuration('PT3H')]
+let $appointments2HrsBefore := $appointments[xs:dateTime(ExpectedVesselOriginDepartureDateTime) le xs:dateTime(ScheduleStartDateTime) - xs:dayTimeDuration('PT2H')]
+let $appointments1HrBefore := $appointments[xs:dateTime(ExpectedVesselOriginDepartureDateTime) le xs:dateTime(ScheduleStartDateTime) - xs:dayTimeDuration('PT1H')]
+
+return
+  element Result {
+    element Appointments4HrsBefore { $appointments4HrsBefore },
+    element Appointments3HrsBefore { $appointments3HrsBefore },
+    element Appointments2HrsBefore { $appointments2HrsBefore },
+    element Appointments1HrBefore { $appointments1HrBefore }
+  }
