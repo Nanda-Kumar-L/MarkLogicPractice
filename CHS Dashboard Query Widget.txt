@@ -250,3 +250,189 @@ return
     element Appointments2HrsBefore { $appointments2HrsBefore },
     element Appointments1HrBefore { $appointments1HrBefore }
   }
+
+
+
+
+
+
+
+
+
+
+
+
+6)Total Barges/Trucks/Rail Arrrived but not checked in more than Xhrs
+
+declare function local:waiting-hours($arrival as xs:dateTime) as xs:double {
+  let $currentDateTime := fn:current-dateTime()
+  return xs:double($currentDateTime - $arrival) div 3600
+};
+
+
+let $results :=
+  for $shipment in fn:collection("ShipmentsAndInventory")
+  let $inventoryId := $shipment/InventoryId
+  let $inventoryType := $shipment/InventoryType
+  let $arrivalDateTime := xs:dateTime($shipment/ActualShipmentDestinationArrivalDateTime)
+  let $waitingHours := local:waiting-hours($arrivalDateTime)
+  let $appointment :=
+    for $appt in fn:collection("Appointment")
+    where $appt/InventoryId eq $inventoryId and $appt/AppointmentStatus eq "Confirmed"
+    return $appt
+  where fn:exists($appointment) and $shipment/ShipmentStatus eq "Arrived"
+  return
+    element object {
+      element InventoryId { $inventoryId },
+      element InventoryType { $inventoryType },
+      element ActualShipmentDestinationArrivalDateTime { $arrivalDateTime },
+      element WaitingHours { $waitingHours }
+    }
+
+
+let $groupedResults :=
+  for $type in fn:distinct-values($results/InventoryType)
+  let $filteredResults := $results[InventoryType eq $type]
+  let $count := fn:count($filteredResults)
+  return
+    element object {
+      element InventoryType { $type },
+      element CountOfInventoryId { $count },
+      element Details { $filteredResults }
+    }
+
+return element Result { $groupedResults }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+7)Total Barges/Trucks/Rail partially unloaded with idle time(waiting time since the arrival)
+
+
+declare function local:idle-time($checkedIn as xs:dateTime) as xs:double {
+  let $currentDateTime := fn:current-dateTime()
+  return xs:double($currentDateTime - $checkedIn) div 86400 
+};
+
+
+let $results :=
+  for $shipment in fn:collection("ShipmentsAndInventory")
+  let $inventoryId := $shipment/InventoryId
+  let $inventoryType := $shipment/InventoryType
+  let $arrivalDateTime := xs:dateTime($shipment/ActualShipmentDestinationArrivalDateTime)
+  let $checkedInDateTime := xs:dateTime($shipment/CheckedInDateTime)
+  let $idleTime := local:idle-time($checkedInDateTime)
+  where $shipment/ShipmentStatus eq "Partially Unloaded"
+  return
+    element object {
+      element InventoryId { $inventoryId },
+      element InventoryType { $inventoryType },
+      element ActualShipmentDestinationArrivalDateTime { $arrivalDateTime },
+      element ShipmentStatus { $shipment/ShipmentStatus },
+      element IdleTimeInDays { $idleTime }
+    }
+
+
+let $groupedResults :=
+  for $type in fn:distinct-values($results/InventoryType)
+  let $filteredResults := $results[InventoryType eq $type]
+  let $count := fn:count($filteredResults)
+  return
+    element object {
+      element InventoryType { $type },
+      element CountOfInventoryId { $count },
+      element Details { $filteredResults }
+    }
+ 
+return element Result { $groupedResults }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+8)Total Appointments to be loaded for a given vessel line up 
+
+xquery version "1.0-ml";
+
+element result{
+  for $i in collection("VesselLineupBlend")
+  let $lineupId := $i//lineupId
+  let $appointmentIds := 
+    for $Appointment in collection("Appointments")//Appointment
+    where $Appointment//$lineupId eq $lineupId and $Appointment/AppointmentStatus eq 'Confirmed' and $Appointment/AppointmentType eq 'Load'
+    return $Appointment
+  return element lineupId{$lineupId, element count{count($appointmentIds)}}
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+9)Potential contract voilation if "Y" appointments are not loaded in Xhrs 
+
+
+let $currentDateTime := current-dateTime()
+
+
+let $appointments := for $appt in collection("Appointment")
+    where $appt/AppointmentStatus eq "Confirmed"
+    and $appt/AppointmentType eq "Load"
+    and $currentDateTime > xs:dateTime($appt/ScheduledEndDateTime) + xs:dayTimeDuration("PT5H")
+    return $appt
+
+ 
+for $appt in $appointments
+let $vesselLineupBlend := collection("VesselLineUpBlend")/VesselLineUpBlend[VesselId eq $appt/VesselId]
+return
+    element object {
+        element "VesselId" { $vesselLineupBlend/VesselId },
+        element "LineupId" { $vesselLineupBlend/LineupId },
+        element "Appointment" {
+            element "AppointmentId" { $appt/AppointmentId },
+            element "ScheduledStartDateTime" { $appt/ScheduledStartDateTime },
+            element "ScheduledEndDateTime" { $appt/ScheduledEndDateTime },
+            element "NoOfHoursCrossedScheduledEndDateTime" {
+                hours-from-duration(
+                    $currentDateTime - xs:dateTime($appt/ScheduledEndDateTime)
+                )
+            }
+        }
+    }
