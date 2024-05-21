@@ -763,7 +763,7 @@ let $results :=
       let $appointmentType := $appointment//AppointmentType
       let $appointmentStatus := $appointment//AppointmentStatus
       
-return (element object{element column1{$appointmentType,$appointmentStatus},element column2{$vesselId,$journeyId,$inventoryId,$inventoryType,$shipmentStatus}})
+return (element object{$vesselId,$journeyId,$inventoryId,$inventoryType,$shipmentStatus,$appointmentType,$appointmentStatus})
 
 return element result{
   for $type in fn:distinct-values($Appointments//AppointmentType)
