@@ -45,12 +45,11 @@ for $lineup in fn:distinct-values($vessels//LineUpId)
 let $vessel := $vessels[.//LineUpId eq $lineup]
 let $appointment := $Appointments[.//AppointmentId eq $vessel//LoadingAppointmentId]
 let $appointmentId := $appointment//AppointmentId
-let $ScheduledStartDateTime := $appointment/ScheduledStartDateTime
-let $ScheduleEndDateTime := $appointment/ScheduledEndDateTime
+let $ScheduledStartDateTime := $appointment//ScheduledStartDateTime
+let $ScheduleEndDateTime := $appointment//ScheduledEndDateTime
 return (element Lineup{$lineup},
     element Appointment{$appointmentId,$ScheduledStartDateTime,$ScheduleEndDateTime})
 }
-
 
 
 
@@ -85,7 +84,7 @@ let $lateAppointments :=
       let $appointmentId := $appointment//AppointmentId
       let $scheduledStartDateTime := $appointment//ScheduledStartDateTime
       let $scheduledEndDateTime := $appointment//ScheduledEndDateTime
-      where $appointment/AppointmentType = "Load" and $appointment//AppointmentId = $vessel//AppointmentId
+      where $appointment//AppointmentType = "Load" and $appointment//AppointmentId = $vessel//AppointmentId
             and xs:dateTime($appointment//actualCheckInDateTime) > $currentDate
       return
         element Appointment { $appointmentId,$scheduledStartDateTime,$scheduledEndDateTime }
@@ -112,9 +111,9 @@ return element result { $lateAppointments }
 
 let $impactedShipments :=
   for $shipment in fn:collection("Shipments and Inventory")
-  let $routeId := $shipment/RouteId/text()
-  let $inventoryId := $shipment/InventoryId/text()
-  let $inventoryType := $shipment/InventoryType/text()
+  let $routeId := $shipment//RouteId
+  let $inventoryId := $shipment//InventoryId
+  let $inventoryType := $shipment//InventoryType
   let $weatherDisruption := fn:collection("Weather Disruption")//Disruption[Zip eq $routeId]
   let $riverDisruption := fn:collection("River Disruption")//Disruption[RiverLocation eq $routeId]
   where exists($weatherDisruption) or exists($riverDisruption)
@@ -122,10 +121,7 @@ let $impactedShipments :=
     if ((exists($weatherDisruption) and $weatherDisruption/DisruptionStatus != "Normal") or
        (exists($riverDisruption) and $riverDisruption/DisruptionStatus != "Normal"))
     then
-      element Shipment {
-        element InventoryId { $inventoryId },
-        element InventoryType { $inventoryType },
-        element RouteId { $routeId },
+      element Shipment { $inventoryId, $inventoryType, $routeId,
         element WeatherDisruptionStatus { $weatherDisruption/DisruptionStatus },
         element RiverDisruptionStatus { $riverDisruption/DisruptionStatus }
       }
@@ -163,6 +159,7 @@ return
 
 
 
+
 4) Total Appointments rescheduled more than once 
 
 let $rescheduledAppointments :=
@@ -185,6 +182,7 @@ return
   element Result {
     element RescheduledAppointments { $rescheduledAppointments }
   }
+
 
 
 
@@ -250,37 +248,42 @@ return
 
 
 
+
 6)Total Barges/Trucks/Rail Arrrived but not checked in more than Xhrs
 
-declare function local:waiting-hours($arrival as xs:dateTime) as xs:double {
+declare function local:waiting-hours($arrival as xs:dateTime){
   let $currentDateTime := fn:current-dateTime()
-  return xs:double($currentDateTime - $arrival) div 3600
+  return fn:days-from-duration(xs:duration($arrival - $currentDateTime)) * 24
 };
 
 
 let $results :=
   for $shipment in fn:collection("ShipmentsAndInventory")
-  let $inventoryId := $shipment/InventoryId
-  let $inventoryType := $shipment/InventoryType
-  let $arrivalDateTime := xs:dateTime($shipment/ActualShipmentDestinationArrivalDateTime)
-  let $waitingHours := local:waiting-hours($arrivalDateTime)
-  let $appointment :=
-    for $appt in fn:collection("Appointment")
-    where $appt/InventoryId eq $inventoryId and $appt/AppointmentStatus eq "Confirmed"
-    return $appt
-  where fn:exists($appointment) and $shipment/ShipmentStatus eq "Arrived"
+  let $inventoryId := $shipment//InventoryId
+  let $inventoryType := $shipment//InventoryType
+  let $appointments :=
+    for $appointment in fn:collection("Appointment")
+    let $arrivalDateTime := xs:dateTime($appointment//ActualShipmentDestinationArrivalDateTime)
+    let $waitingHours := local:waiting-hours($arrivalDateTime)
+    where $appointment//InventoryId eq $inventoryId and $appointment//AppointmentStatus eq "Confirmed"
+    return (
+      element appointment {
+        element ActualShipmentDestinationArrivalDateTime { $arrivalDateTime },
+        element WaitingHours { $waitingHours }
+        }
+      )
+  where fn:exists($appointments) and $shipment//ShipmentStatus eq "Arrived"
   return
-    element object {
+    element shipment {
       element InventoryId { $inventoryId },
       element InventoryType { $inventoryType },
-      element ActualShipmentDestinationArrivalDateTime { $arrivalDateTime },
-      element WaitingHours { $waitingHours }
+      $appointments
     }
 
 
 let $groupedResults :=
-  for $type in fn:distinct-values($results/InventoryType)
-  let $filteredResults := $results[InventoryType eq $type]
+  for $type in fn:distinct-values($results//InventoryType)
+  let $filteredResults := $results[.//InventoryType eq $type]
   let $count := fn:count($filteredResults)
   return
     element object {
@@ -290,6 +293,7 @@ let $groupedResults :=
     }
 
 return element Result { $groupedResults }
+
 
 
 
@@ -311,34 +315,35 @@ return element Result { $groupedResults }
 
 7)Total Barges/Trucks/Rail partially unloaded with idle time(waiting time since the arrival)
 
-
-declare function local:idle-time($checkedIn as xs:dateTime) as xs:double {
+declare function local:idle-time($checkedIn as xs:dateTime){
   let $currentDateTime := fn:current-dateTime()
-  return xs:double($currentDateTime - $checkedIn) div 86400 
+  return fn:days-from-duration(xs:duration($checkedIn - $currentDateTime))
 };
 
 
 let $results :=
   for $shipment in fn:collection("ShipmentsAndInventory")
-  let $inventoryId := $shipment/InventoryId
-  let $inventoryType := $shipment/InventoryType
-  let $arrivalDateTime := xs:dateTime($shipment/ActualShipmentDestinationArrivalDateTime)
-  let $checkedInDateTime := xs:dateTime($shipment/CheckedInDateTime)
+  let $inventoryId := $shipment//InventoryId
+  let $inventoryType := $shipment//InventoryType
+  let $arrivalDateTime := $shipment//ActualShipmentDestinationArrivalDateTime
+  let $shipmentStatus := $shipment//ShipmentStatus
+  let $checkedInDateTime := $shipment//CheckedInDateTime
   let $idleTime := local:idle-time($checkedInDateTime)
-  where $shipment/ShipmentStatus eq "Partially Unloaded"
+  
+  where $shipment//ShipmentStatus eq "Partially Unloaded"
   return
     element object {
-      element InventoryId { $inventoryId },
-      element InventoryType { $inventoryType },
-      element ActualShipmentDestinationArrivalDateTime { $arrivalDateTime },
-      element ShipmentStatus { $shipment/ShipmentStatus },
+      $inventoryId,
+      $inventoryType,
+      $arrivalDateTime,
+      $shipmentStatus,
       element IdleTimeInDays { $idleTime }
     }
 
 
 let $groupedResults :=
-  for $type in fn:distinct-values($results/InventoryType)
-  let $filteredResults := $results[InventoryType eq $type]
+  for $type in fn:distinct-values($results//InventoryType)
+  let $filteredResults := $results[.//InventoryType eq $type]
   let $count := fn:count($filteredResults)
   return
     element object {
@@ -365,19 +370,20 @@ return element Result { $groupedResults }
 
 
 
+
 8)Total Appointments to be loaded for a given vessel line up 
 
-xquery version "1.0-ml";
-
 element result{
-  for $i in collection("VesselLineupBlend")
+  for $i in collection("Vessel Lineup Blend")
   let $lineupId := $i//lineupId
-  let $appointmentIds := 
-    for $Appointment in collection("Appointments")//Appointment
-    where $Appointment//$lineupId eq $lineupId and $Appointment/AppointmentStatus eq 'Confirmed' and $Appointment/AppointmentType eq 'Load'
-    return $Appointment
-  return element lineupId{$lineupId, element count{count($appointmentIds)}}
+  let $appointments := 
+    for $appointment in collection("Appointments")
+    let $appointmentId := $appointment//AppointmentId
+    where $appointment//$lineupId eq $lineupId and $appointment//AppointmentStatus eq 'Confirmed' and $appointment//AppointmentType eq 'Load'
+    return element appointment{$appointmentId}
+  return element lineupId{$lineupId, element count{count($appointments)}, element object{$appointments}}
 }
+
 
 
 
@@ -396,35 +402,34 @@ element result{
 
 9)Potential contract voilation if "Y" appointments are not loaded in Xhrs 
 
-
 let $currentDateTime := current-dateTime()
 
+let $appointments := for $appointment in collection("Appointment")
+    where $appointment//AppointmentStatus eq "Confirmed"
+    and $appointment//AppointmentType eq "Load"
+    and  xs:dateTime($appointment//ScheduledStartDateTime) > (xs:dateTime($appointment//ScheduledEndDateTime) + xs:dayTimeDuration("PT5H"))
+    return $appointment
 
-let $appointments := 
-    for $appt in collection("Appointment")
-    where $appt/AppointmentStatus eq "Confirmed"
-    and $appt/AppointmentType eq "Load"
-    and $currentDateTime > xs:dateTime($appt/ScheduledEndDateTime) + xs:dayTimeDuration("PT5H")
-    return $appt
-
- 
-for $appt in $appointments
-let $vesselLineupBlend := collection("VesselLineUpBlend")/VesselLineUpBlend[VesselId eq $appt/VesselId]
+return element result{ 
+for $appointment in $appointments
+let $vesselLineupBlend := collection("Vessel LineUp Blend")[.//VesselId eq $appointment//VesselId]
+let $vesselJourney := collection("Vessel Journey")[.//VesselId eq $appointment//VesselId]
 return
     element object {
-        element "VesselId" { $vesselLineupBlend/VesselId },
-        element "LineupId" { $vesselLineupBlend/LineupId },
-        element "Appointment" {
-            element "AppointmentId" { $appt/AppointmentId },
-            element "ScheduledStartDateTime" { $appt/ScheduledStartDateTime },
-            element "ScheduledEndDateTime" { $appt/ScheduledEndDateTime },
-            element "NoOfHoursCrossedScheduledEndDateTime" {
+        element VesselId { $vesselLineupBlend//VesselId },
+        element LineupId { $vesselLineupBlend//LineupId },
+        element Appointment {
+            element AppointmentId { $appointment//AppointmentId },
+            element ScheduledStartDateTime { $appointment//ScheduledStartDateTime },
+            element ScheduledEndDateTime { $appointment//ScheduledEndDateTime },
+            element NoOfHoursCrossedScheduledEndDateTime {
                 hours-from-duration(
-                    $currentDateTime - xs:dateTime($appt/ScheduledEndDateTime)
+                    $currentDateTime - xs:dateTime($appointment//ScheduledEndDateTime)
                 )
             }
         }
     }
+}
 
 
 
@@ -445,28 +450,31 @@ let $currentDate := fn:current-date()
 
 let $results :=
   for $appointment in fn:collection("Appointment")
-  where fn:starts-with($appointment/ScheduledStartDate/text(), $currentDate)
-  let $appointmentType := $appointment/AppointmentType/text()
-  let $equipmentType := $appointment/EquipmentType/text()
+  let $appointmentType := $appointment//AppointmentType
+  let $equipmentType := $appointment//EquipmentType
+  let $scheduledStartDate := $appointment//ScheduledStartDate
+  where $scheduledStartDate eq $currentDate
   return
     element object {
-      element AppointmentType { $appointmentType },
-      element EquipmentType { $equipmentType },
-      element ScheduleStartDate { $appointment/ScheduledStartDate/text() }
+      $appointmentType,
+      $equipmentType,
+      $scheduledStartDate
     }
-
+    
+let $sumOfAppointments := fn:count($results)
  
 let $groupedResults :=
-  for $type in fn:distinct-values($results/EquipmentType)
-  let $filteredResults := $results[EquipmentType eq $type]
-  let $count := fn:count($filteredResults)
+
+  for $type in fn:distinct-values($results//EquipmentType)
   return
     element object {
       element EquipmentType { $type },
-      element CountOfAppointments { $count }
+        let $filteredResults := $results[.//EquipmentType eq $type]
+        for $i in $filteredResults
+        return $i
     }
 
-return element Result { $groupedResults }
+return element Result { element sumOfAppointments{$sumOfAppointments}, $groupedResults }
 
 
 
@@ -481,35 +489,35 @@ return element Result { $groupedResults }
 
 11)Total Appointments for X date group by Vessels
 
-xquery version "1.0-ml";
-
 let $currentDate := fn:current-date()
 
 let $results :=
   for $appointment in fn:collection("Appointment")
-  let $appointmentType := $appointment/AppointmentType/text()
-  let $VesselID := $appointment/VesselID/text()
-  where fn:starts-with($appointment/ScheduledStartDate/text(), $currentDate)
+  let $appointmentType := $appointment//AppointmentType
+  let $vesselId := $appointment//VesselId
+  let $scheduledStartDate := $appointment//ScheduledStartDate
+  where $scheduledStartDate eq $currentDate
   return
     element object {
-      element AppointmentType { $appointmentType },
-      element VesselID { $VesselID },
-      element ScheduleStartDate { $appointment/ScheduledStartDate/text() }
+      $appointmentType,
+      $vesselId,
+      $scheduledStartDate
     }
-
+    
+let $sumOfAppointments := fn:count($results)
  
 let $groupedResults :=
-  for $i in fn:distinct-values($results/VesselID)
-  let $filteredResults := $results[VesselID eq $i]
-  let $count := fn:count($filteredResults)
+
+  for $Id in fn:distinct-values($results//VesselId)
   return
     element object {
-      element VesselID { $i },
-      element CountOfAppointments { $count }
+      element VesselId { $Id },
+        let $filteredResults := $results[.//VesselId eq $Id]
+        for $i in $filteredResults
+        return $i
     }
 
-return element Result { $groupedResults }
-
+return element Result { element sumOfAppointments{$sumOfAppointments}, $groupedResults }
 
 
 
@@ -526,30 +534,23 @@ return element Result { $groupedResults }
 
 12)Total shipments Unloading in real time
 
-let $currentDate := fn:current-date()
+let $currentDate := fn:current-dateTime()
 
-let $results :=
-  element result{
-  for $appointment in fn:collection("Appointment")
-  let $id := $appointment/InventoryId
-  let $shipments :=
-    for $shipment in fn:collection("Shipments and Inventory")
-    where $shipment/InventoryId eq $id
-    return $shipment
-  where $appointment/type eq 'Unload' and $appointment/ScheduledStartDate eq $currentDate
-  return element shipments {$shipments}
-}
+let $appointments := collection("Appointment")[.//AppointmentType eq 'Unload' and ScheduledStartDateTime eq $currentDate]
 
 return
-  element results{
-    for $i in $results/*
-    let $count := fn:count($i)
-    return 
-      (  
-        element inventoryId{ $i/InventoryId },
-        element count{$count}
-      )
-  }
+  element result{
+  for $shipment in fn:collection("Shipments and Inventory")
+  let $id := $shipment//InventoryId
+  let $shipments :=
+    for $appointment in $appointments
+    let $appointmentType := $appointment//AppointmentType
+    let $scheduledStartDateTime := $appointment//ScheduledStartDateTime
+    where $appointment//InventoryId eq $id
+    return element shipment{ $appointmentType,$scheduledStartDateTime,$id }
+  return element object{element InventoryId{$id}, element shipments {$shipments} }
+}
+
 
 
 
@@ -618,6 +619,45 @@ element result{
 }
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+16)shipments not meeting contract specs based on latest OB grade results
+
+let $vesselLineup := collection('Vessel Lineup Inv')
+let $agriContract := collection('Agri Contract Detail')
+let $shipmentsInventory := collection('Shipments and Inventory')
+
+return element result{
+for $shipment in $shipmentsInventory
+let $inventoryId := $shipment//InventoryId
+let $contractId := $shipment//ContractId
+let $commodity := $shipment//Commodity
+let $loadingGrade := $shipment//LoadingGrade
+let $arrivalDateTime := $shipment//ArrivalDateTime
+
+let $vessel := $vesselLineup[$vesselLineup//InventoryId = $inventoryId and $arrivalDateTime < $vesselLineup//VesselDepartureDateTime]
+
+let $contract := $agriContract[$agriContract//ContractId = $contractId and $agriContract//CommodityCode = $commodity and $agriContract//Grade = $loadingGrade]
+
+where not(exists($contract))
+return
+    element object {
+        element InventoryId { $inventoryId },
+        element ContractId { $contractId },
+        element Commodity { $commodity },
+        element LoadingGrade { $loadingGrade }
+    }
+}
 
 
 
@@ -707,21 +747,26 @@ let $Vessels := collection('Vessel Lineup Inventory')
 let $Shipments := collection('Shipments and Inventory')
 let $Appointments := collection('Appointment')
 
-return 
-element result{
-for $vessel in $Vessels
-let $shipment := $Shipments[.//InventoryId eq $vessel//InventoryId]
-let $appointment := $Appointments[.//InventoryId eq shipment//InventoryId and .//VesselId eq $vessel//VesselId]
+let $results :=
+  for $vessel in $Vessels
+  let $vesselId := $vessel//VesselId
+  let $journeyId := $vessel//JourneyId
+  let $inventoryId := $vessel//InventoryId
+  let $inventoryType := $vessel//InventoryType
+  let $shipments := $Shipments[.//InventoryId eq $vessel//InventoryId]
 
-let $vesselId := $vessel//VesselId
-let $journeyId := $vessel//JourneyId
-let $inventoryId := $vessel//InventoryId
-let $inventoryType := $vessel//InventoryType
+    for $shipment in $shipments
+    let $shipmentStatus := $shipment//ShipmentStatus
+    let $appointments := $Appointments[.//InventoryId eq shipment//InventoryId and .//VesselId eq $vessel//VesselId]
 
-let $shipmentStatus := $shipment//ShipmentStatus
-
-let $appointmentType := $appointment//AppointmentType
-let $appointmentStatus := $appointment//AppointmentStatus
-
+      for $appointment in $appointments
+      let $appointmentType := $appointment//AppointmentType
+      let $appointmentStatus := $appointment//AppointmentStatus
+      
 return (element object{element column1{$appointmentType,$appointmentStatus},element column2{$vesselId,$journeyId,$inventoryId,$inventoryType,$shipmentStatus}})
+
+return element result{
+  for $type in fn:distinct-values($Appointments//AppointmentType)
+  let $var := $results[.//appointmentType eq $type]
+  return ( $type, element object{$var})
 }
